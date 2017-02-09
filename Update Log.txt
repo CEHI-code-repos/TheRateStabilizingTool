@@ -1,0 +1,32 @@
+version 1.10:
+1. Add number of years parameter. Now the rates in output table are death rate per year.
+
+version 1.09a:
+1. Fix a bug of space displayed before text field
+
+version 1.09:
+1. Updated data fetch module for security
+2. Add button in the interface to enable county focus analysis. (Dealing with the missing value issue)
+
+version 1.08:
+1. Add separate modules for data fetch
+
+version 1.07:
+1. Add Schema.ini file for outputs. So it can correctly imported to ArcGIS
+
+version 1.05, 1.06:
+1. Minor Bug fix
+
+version 1.0:
+1. Add total Population to the final table, along with an alert when total population is lower than 16
+2. Add Bayesian estimates
+
+version 0.9:
+1. Bug fixes - fix the issue that certain age structure could collapse the program 
+2. New Feature - users can now use one negative number to control the maxmium age 
+
+version 0.7:
+1. Add brief help description
+
+version 0.5:
+1. Initial build
