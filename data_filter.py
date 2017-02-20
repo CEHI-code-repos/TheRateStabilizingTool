@@ -37,7 +37,7 @@ def build_filt_dict (indi_data, id_field):
 	return filt_dict	
 
 # Filter data based on county code dictionary
-def filter_with_dict (data, note_col, id_field, filt_dict):
+def filter_with_dict (data, note_col, id_field, filt_dict, cnty_filter = True):
 	fieldnames = note_col[0]	
 	#arcpy.AddMessage(fieldnames)
 	f_index = if_fieldname_exist(id_field, fieldnames)
@@ -46,7 +46,10 @@ def filter_with_dict (data, note_col, id_field, filt_dict):
 	i = 1
 	while i < (len(note_col)):
 		row_data = note_col[i]
-		key_value = row_data[f_index][0:5]
+		if cnty_filter:
+			key_value = row_data[f_index][0:5]
+		else:
+			key_value = row_data[f_index]
 		if if_key_exist(key_value, filt_dict):
 			result_index.append(i)
 		i += 1
@@ -59,3 +62,59 @@ def filter_with_dict (data, note_col, id_field, filt_dict):
 	
 	return [filtered_result, filtered_note_col]
 	
+	
+	
+#input_shp = "NC_tract_2010"	
+#IDfield="OBJECTID"
+#GeoIDfield="GEOID10"
+#selection_type = "First_Order"
+def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Order"):
+	input_fields = arcpy.ListFields(input_shp)
+	id_type=""
+	for field in input_fields:
+		if field.name == GeoIDfield:
+			id_type = field.type
+			break
+	if id_type =="":
+		arcpy.AddError("GEOID field does not exist!!!")
+	sc = arcpy.SearchCursor(input_shp)
+	IDlist = dict()
+	row = sc.next()
+	while row is not None:
+		tempid = row.getValue(GeoIDfield)
+		if if_key_exist(tempid, IDlist):
+			arcpy.AddError("Duplicate GeoIDs detected in Shapefile... Please Clean data first...")
+		else:	
+			IDlist[row.getValue(GeoIDfield)] = 1
+		row = sc.next()
+	table_view = arcpy.MakeFeatureLayer_management(input_shp, "temp_tv")
+	del sc
+	del row
+
+	neighbor_dict = dict()
+	for geoid in IDlist:
+		temp_dict = dict()
+		if not id_type == "String":
+			arcpy.SelectLayerByAttribute_management(table_view,"NEW_SELECTION", GeoIDfield + " = " + str(geoid))
+		else:
+			arcpy.SelectLayerByAttribute_management(table_view,"NEW_SELECTION", GeoIDfield + " = '" + str(geoid)+"'")
+		if selection_type == "First_Order":
+			arcpy.SelectLayerByLocation_management(table_view,"INTERSECT", table_view, selection_type="ADD_TO_SELECTION")
+			sc = arcpy.SearchCursor(table_view)
+			row = sc.next()
+			while row is not None:
+				temp_dict[row.getValue(GeoIDfield)] = 1
+				row = sc.next()
+		neighbor_dict[geoid] = temp_dict
+	return neighbor_dict
+
+
+
+
+
+
+
+
+
+
+
