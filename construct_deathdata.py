@@ -1,6 +1,8 @@
 import os, arcpy, numpy, numbers
 import datetime as dt
 from operator import itemgetter
+import data_filter as df # This module filtered the result based on input
+df = reload(df) # Make sure newest module is loaded
 
 ### Basic Function built-up
 # Check if a key exist in a dictionary
@@ -166,10 +168,12 @@ def df_sum(df):
 # Get prior events and prior population for each age categories in each geographic area
 def get_a0_n0 (result, ncol, death_count, percentile):
 	pop_mat = col_erase(result, sequence(-1, ncol, -1))
-	case_mat = col_erase(death_count, sequence(-1, ncol+1, -1))
-	n_tot = df_sum(pop_mat)
-	c_tot = df_sum(case_mat)
-	lam = float(c_tot)/ n_tot
+	case_mat = col_erase(death_count, sequence(-1, ncol, -1))
+	#n_tot = df_sum(pop_mat)
+	#c_tot = df_sum(case_mat)
+	n_tot = col_sum(pop_mat)
+	c_tot = col_sum(case_mat)
+	lam = vector_divide(c_tot, n_tot)
 
 	num_col = len(result[0]) - ncol
 	n0 = []
@@ -181,7 +185,7 @@ def get_a0_n0 (result, ncol, death_count, percentile):
 		s_temp = sorted(temp)
 		n0.append(s_temp[int(percentile * len(result))])
 		i += 1
-	a0 = vector_multi(n0, sequence(lam, len(n0), 0))
+	a0 = vector_multi(n0, lam)
 	return [a0, n0]
 	
 # Sample the vector based on percentile
@@ -203,7 +207,7 @@ def col_divide(df, ncol, num, header = False):
 	return df
 
 ### Function to be call by the main core. It is the wrapped function for this module
-def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear):
+def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp, GeoID):
 	arcpy.AddMessage("Constructing disease/death rate from individual records...")
 	## Construct basic matrix for each geographic boundary
 	num_count = len(percent[0])
@@ -248,7 +252,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			j += 1
 		aar_bayesian.append(sample_percentile(col_sum(age_group), [0.5, 0.025, 0.975]))
 		i += 1
-	
+
 	aar_bayesian = col_divide(aar_bayesian,0,nyear, True)
 	aar_bayesian = col_divide(aar_bayesian,1,nyear, True)
 	aar_bayesian = col_divide(aar_bayesian,2,nyear, True)
@@ -270,14 +274,14 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	age_adj_rate = [["Age_adjust_rate"]]
 	age_adj_rate.extend(col_divide(row_sum(rate),0,nyear))
 
-	
+
 	###
 	### For Empirical Bayesian
 	###
 	age_adj_rate = c_merge(age_adj_rate, aar_bayesian)
-	
+
 	aver_rate = float(sum(a0)) / sum(n0)
-	
+
 	pop_seq = col_erase(result[1:], sequence(-1, ncol, -1))
 	pop_sum = row_sum(pop_seq)
 	#arcpy.AddMessage(len(pop_sum))
@@ -293,6 +297,18 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	pop_name = [["Population", "Alert"]]
 	pop_name.extend(pop_sum)
 	### Bayesian ends here
+
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	output = c_merge(age_adj_rate, r_note_col)

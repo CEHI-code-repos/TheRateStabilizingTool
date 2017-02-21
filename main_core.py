@@ -27,6 +27,10 @@ nyear = float(arcpy.GetParameterAsText(9)) # Get number of year
 
 partial_data = str(arcpy.GetParameterAsText(10)).upper() # Turn on to switch to county only version
 
+state_shp = str(arcpy.GetParameterAsText(11)) # Shapefile for selected state. Optional, only needed when calculate spatial Bayesian 
+
+GeoID = str(arcpy.GetParameterAsText(12)) # GEOID used to identify census boundaries
+
 # Built-in CDC age structure
 ## Not in use yet. For future Development
 s0 = [0,1,2,5,6,9,10,12,15,18,20,25,30,35,40,45,50,55,60,65,70,75,80,85]
@@ -131,7 +135,7 @@ f.writelines(cd.vect_to_str(percent[0]) + "\n")
 f.close()
 
 # Call construct_deathdata function in cd module. This module returns the age adjusted rate
-outputpath = cd.construct_deathdata(r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear)
+outputpath = cd.construct_deathdata(r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp, GeoID)
 
 # Update Schema.ini file
 f = open(outputfolder + "\\" + "schema.ini", "a")
