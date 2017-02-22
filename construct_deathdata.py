@@ -1,4 +1,4 @@
-import os, arcpy, numpy, numbers
+import os, arcpy, numpy, numbers, ast
 import datetime as dt
 from operator import itemgetter
 import data_filter as df # This module filtered the result based on input
@@ -229,7 +229,7 @@ def col_divide(df, ncol, num, header = False):
 	return df
 
 ### Function to be call by the main core. It is the wrapped function for this module
-def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp, GeoID):
+def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
 	arcpy.AddMessage("Constructing disease/death rate from individual records...")
 	## Construct basic matrix for each geographic boundary
 	num_count = len(percent[0])
@@ -322,12 +322,18 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 
 	
 	
-	if state_shp != "":
+	if state_shp != "" or ngbh_dict_loc != "":
 		arcpy.AddMessage("Spatial smoothing the results...")
 		
 		### Spatial Bayesian Starts here
-		# Construct neighborhood dictionary  (df module should be imported in the main driver)
-		ngbh_dict = df.build_neighborhood_dict (state_shp, GeoID, selection_type = "First_Order")
+		if ngbh_dict_loc != "":
+			fngbh = open(ngbh_dict_loc, 'r')
+			ngbh_dict = ast.literal_eval(fngbh.read())
+			fngbh.close()
+			del fngbh
+		else:
+			ngbh_dict = df.build_neighborhood_dict (state_shp, GeoID, selection_type = "First_Order")
+
 		
 		i = 0
 		sp_aar_bayesian = []

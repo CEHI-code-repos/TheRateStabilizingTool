@@ -62,12 +62,7 @@ def filter_with_dict (data, note_col, id_field, filt_dict, cnty_filter = True):
 	
 	return [filtered_result, filtered_note_col]
 	
-	
-	
-#input_shp = "NC_tract_2010"	
-#IDfield="OBJECTID"
-#GeoIDfield="GEOID10"
-#selection_type = "First_Order"
+
 def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Order"):
 	arcpy.AddMessage("Start to build neighborhood dictonary...")
 	input_fields = arcpy.ListFields(input_shp)
@@ -110,8 +105,8 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 				temp_dict[row.getValue(GeoIDfield)] = 1
 				row = sc.next()
 		neighbor_dict[geoid] = temp_dict
-		if i % 40 == 0:
-			arcpy.AddMessage(str(float(i)/len(IDlist)*100) + "% done...")
+		if i % 100 == 0:
+			arcpy.AddMessage("%.2f" % (float(i)/len(IDlist)*100) + "% Done..." )
 		i += 1
 		
 	arcpy.AddMessage("Neighborhood dictonary built successfully!!")
