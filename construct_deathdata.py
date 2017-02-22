@@ -118,6 +118,24 @@ def vector_multi (v1,v2):
 			result.append(float(v1[i])*float(v2[i]))
 			i += 1
 		return result
+		
+# Vector plus X1i + Y1i
+def vector_plus (v1, v2):
+	result = []
+	if isinstance(v2, numbers.Number):
+		i = 0
+		while i < len(v1):
+			result.append(float(v1[i]) + float(v2))
+			i += 1
+		return result
+	elif (len(v1) != len(v2)):
+		raise ValueError("Length of Two Vector is not the same")
+	else:
+		i = 0
+		while i < len(v1):
+			result.append(float(v1[i]) + float(v2[i]))
+			i += 1
+		return result
 
 # Data frame Row sum
 def row_sum (df):
@@ -166,29 +184,33 @@ def df_sum(df):
 	return result
 
 # Get prior events and prior population for each age categories in each geographic area
-def get_a0_n0 (result, ncol, death_count, percentile):
+def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0):  # Set a00 n00 0 for global a0 and n0 calculation
 	pop_mat = col_erase(result, sequence(-1, ncol, -1))
 	case_mat = col_erase(death_count, sequence(-1, ncol, -1))
 	#n_tot = df_sum(pop_mat)
 	#c_tot = df_sum(case_mat)
 	n_tot = col_sum(pop_mat)
 	c_tot = col_sum(case_mat)
-	lam = vector_divide(c_tot, n_tot)
+	lamadj = vector_divide(vector_plus(c_tot, a00), vector_plus(n_tot, n00))
 
-	num_col = len(result[0]) - ncol
-	n0 = []
-	i = 0
-	while i < num_col:
-		temp = []
-		for row in pop_mat:
-			temp.append(row[i])
-		s_temp = sorted(temp)
-		n0.append(s_temp[int(percentile * len(result))])
-		i += 1
-	a0 = vector_multi(n0, lam)
-	return [a0, n0]
+	if n00 == 0:
+		num_col = len(result[0]) - ncol
+		n0 = []
+		i = 0
+		while i < num_col:
+			temp = []
+			for row in pop_mat:
+				temp.append(row[i])
+			s_temp = sorted(temp)
+			n0.append(s_temp[int(percentile * len(result))])
+			i += 1
+	else:
+		n0 = n00
+		
+	a0adj = vector_multi(n0, lamadj)
+	return [a0adj, n0]
 	
-# Sample the vector based on percentile
+# Sample the vector based on percentile, Unit in /100,000people
 def sample_percentile (vector, percentile_vector):
 	temp = sorted(vector)
 	result = []
@@ -299,18 +321,45 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	### Bayesian ends here
 
 	
+	
+	if state_shp != "":
+		arcpy.AddMessage("Spatial smoothing the results...")
+		
+		### Spatial Bayesian Starts here
+		# Construct neighborhood dictionary  (df module should be imported in the main driver)
+		ngbh_dict = df.build_neighborhood_dict (state_shp, GeoID, selection_type = "First_Order")
+		
+		i = 0
+		sp_aar_bayesian = []
+		field_name = ["SpBay_AAR", "SpBay_2p5", "SpBay_97p5"]
+		sp_aar_bayesian.append(field_name)
+		while i < len(death_count):
+			Geokey = result[i+1][-1]
+			data_list_dict = ngbh_dict[Geokey]
+			[temp_result, temp_col] = df.filter_with_dict (result, r_note_col, "GEOID", data_list_dict, cnty_filter = False)
+			death_with_header = [result[0]]
+			death_with_header.extend(death_count)
+			[temp_death, temp_dcol] = df.filter_with_dict (death_with_header, r_note_col, "GEOID", data_list_dict, cnty_filter = False)
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+			[a0i, n0i] = get_a0_n0 (temp_result[1:], ncol, temp_death[1:], 0.1, a0, n0)
+			
+			Y = death_count[i][0:num_count]
+			n = result[i+1][0:num_count]
+			j = 0
+			sp_age_group = []
+			while j < num_count:
+				sp_g_samps_per = vector_multi(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 1000), percent[0][j])
+				sp_age_group.append(sp_g_samps_per)
+				j += 1
+			sp_aar_bayesian.append(sample_percentile(col_sum(sp_age_group), [0.5, 0.025, 0.975]))
+			i += 1
+
+		sp_aar_bayesian = col_divide(sp_aar_bayesian,0,nyear, True)
+		sp_aar_bayesian = col_divide(sp_aar_bayesian,1,nyear, True)
+		sp_aar_bayesian = col_divide(sp_aar_bayesian,2,nyear, True)
+		age_adj_rate = c_merge(age_adj_rate, sp_aar_bayesian)
+		
+
 	output = c_merge(age_adj_rate, r_note_col)
 	output_pop = c_merge(output, pop_name)
 

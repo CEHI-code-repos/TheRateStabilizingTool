@@ -69,8 +69,10 @@ def filter_with_dict (data, note_col, id_field, filt_dict, cnty_filter = True):
 #GeoIDfield="GEOID10"
 #selection_type = "First_Order"
 def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Order"):
+	arcpy.AddMessage("Start to build neighborhood dictonary...")
 	input_fields = arcpy.ListFields(input_shp)
 	id_type=""
+	arcpy.AddMessage("Checking file for potential errors...")
 	for field in input_fields:
 		if field.name == GeoIDfield:
 			id_type = field.type
@@ -90,8 +92,10 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 	table_view = arcpy.MakeFeatureLayer_management(input_shp, "temp_tv")
 	del sc
 	del row
-
+	
+	arcpy.AddMessage("Searching for neighborhoods...")
 	neighbor_dict = dict()
+	i = 0
 	for geoid in IDlist:
 		temp_dict = dict()
 		if not id_type == "String":
@@ -106,6 +110,11 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 				temp_dict[row.getValue(GeoIDfield)] = 1
 				row = sc.next()
 		neighbor_dict[geoid] = temp_dict
+		if i % 40 == 0:
+			arcpy.AddMessage(str(float(i)/len(IDlist)*100) + "% done...")
+		i += 1
+		
+	arcpy.AddMessage("Neighborhood dictonary built successfully!!")
 	return neighbor_dict
 
 
