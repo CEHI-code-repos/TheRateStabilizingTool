@@ -28,8 +28,12 @@ nyear = float(arcpy.GetParameterAsText(9)) # Get number of year
 partial_data = str(arcpy.GetParameterAsText(10)).upper() # Turn on to switch to county only version
 
 state_shp = str(arcpy.GetParameterAsText(11)) # Shapefile for selected state. Optional, only needed when calculate spatial Bayesian 
+if state_shp == "#":
+	state_shp = ""
 
 GeoID = str(arcpy.GetParameterAsText(12)) # GEOID used to identify census boundaries
+if GeoID == "#":
+	GeoID = ""
 
 # Built-in CDC age structure
 ## Not in use yet. For future Development
