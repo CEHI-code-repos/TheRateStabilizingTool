@@ -230,6 +230,7 @@ def col_divide(df, ncol, num, header = False):
 
 ### Function to be call by the main core. It is the wrapped function for this module
 def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
+	nyear = int(nyear)
 	arcpy.AddMessage("Constructing disease/death rate from individual records...")
 	## Construct basic matrix for each geographic boundary
 	num_count = len(percent[0])
