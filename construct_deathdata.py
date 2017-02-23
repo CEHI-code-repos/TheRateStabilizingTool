@@ -171,7 +171,8 @@ def vect_to_str(vector):
 def gamma_sample (shape, scale, nSample):
 	numpy.random.seed(20151201)
 	if shape == 0:
-		g_sample1000 = sequence(-1, nSample, 0)
+		g_sample1000 = sequence(0, nSample, 0)
+		arcpy.AddWarning("Watch out! Some age group don't have any incident!!!")
 	else:
 		g_sample1000 = numpy.random.gamma(shape, scale, nSample)
 	return g_sample1000
@@ -230,7 +231,7 @@ def col_divide(df, ncol, num, header = False):
 
 ### Function to be call by the main core. It is the wrapped function for this module
 def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
-	nyear = int(nyear)
+	nyear = float(nyear)
 	arcpy.AddMessage("Constructing disease/death rate from individual records...")
 	## Construct basic matrix for each geographic boundary
 	num_count = len(percent[0])

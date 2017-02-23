@@ -108,7 +108,8 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 		if i % 100 == 0:
 			arcpy.AddMessage("%.2f" % (float(i)/len(IDlist)*100) + "% Done..." )
 		i += 1
-		
+	
+	arcpy.Delete_management(table_view)	
 	arcpy.AddMessage("Neighborhood dictonary built successfully!!")
 	return neighbor_dict
 
