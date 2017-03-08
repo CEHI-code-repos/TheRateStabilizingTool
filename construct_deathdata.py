@@ -164,7 +164,7 @@ def vect_to_str(vector):
 			result += "\'" + elem + "\', "
 		else:
 			result += str(elem) + ", "
-	result = result[0:len(result)-2].replace(" ", "")
+	result = result[0:len(result)-2]#.replace(" ", "")
 	return result
 	
 # Sample Gamma function
@@ -228,6 +228,12 @@ def col_divide(df, ncol, num, header = False):
 		df[i][ncol] /= num
 		i += 1
 	return df
+	
+def check_a0_okay(a0):
+	for a0k in a0:
+		if a0k < 0.000001: # Can't use equals to 0 when comparing float points
+			return False
+	return True
 
 ### Function to be call by the main core. It is the wrapped function for this module
 def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
@@ -261,6 +267,9 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	###
 	ncol = len(r_note_col[0])
 	[a0, n0] = get_a0_n0 (result[1:], ncol, death_count, 0.1)
+	incident_alert = not check_a0_okay(a0)
+	#arcpy.AddMessage(str(a0))
+	
 	i = 0
 	aar_bayesian = []
 	field_name = ["Baye_AAR", "Baye_2p5", "Baye_97p5"]
@@ -297,31 +306,6 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		rate.append(vector_multi(percent[0], row))
 	age_adj_rate = [["Age_adjust_rate"]]
 	age_adj_rate.extend(col_divide(row_sum(rate),0,nyear))
-
-
-	###
-	### For Empirical Bayesian
-	###
-	age_adj_rate = c_merge(age_adj_rate, aar_bayesian)
-
-	aver_rate = float(sum(a0)) / sum(n0)
-
-	pop_seq = col_erase(result[1:], sequence(-1, ncol, -1))
-	pop_sum = row_sum(pop_seq)
-	#arcpy.AddMessage(len(pop_sum))
-	#arcpy.AddMessage(len(aar_bayesian))
-	i = 1
-	while i < len(aar_bayesian):
-		row = pop_sum[i-1]
-		if float(aar_bayesian[i][0]) < float(aar_bayesian[i][2])-float(aar_bayesian[i][1]):
-			row.append("Alert:Unreliable Estimate!!!!")
-		else:
-			row.append("-")
-		i += 1
-	pop_name = [["Population", "Alert"]]
-	pop_name.extend(pop_sum)
-	### Bayesian ends here
-
 	
 	
 	if state_shp != "" or ngbh_dict_loc != "":
@@ -368,6 +352,47 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		age_adj_rate = c_merge(age_adj_rate, sp_aar_bayesian)
 		
 
+	###
+	### For Empirical Bayesian
+	###
+	age_adj_rate = c_merge(age_adj_rate, aar_bayesian)
+
+	aver_rate = float(sum(a0)) / sum(n0)
+
+	pop_seq = col_erase(result[1:], sequence(-1, ncol, -1))
+	pop_sum = row_sum(pop_seq)
+	#arcpy.AddMessage(len(pop_sum))
+	#arcpy.AddMessage(len(aar_bayesian))
+	i = 1
+	while i < len(aar_bayesian):
+		row = pop_sum[i-1]
+		if float(aar_bayesian[i][0]) < float(aar_bayesian[i][2])-float(aar_bayesian[i][1]):
+			if state_shp != "" or ngbh_dict_loc != "":
+				if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
+					row.append("Alert:Unreliable Estimate!!!!")
+				else:
+					row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
+			else:
+				row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
+		elif state_shp != "" or ngbh_dict_loc != "":
+			if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
+				row.append("Alert:Unreliable Spatial Bayesian Estimate!!!!")
+			else: 
+				row.append("-")
+		else:
+			row.append("-")
+			
+		if incident_alert:
+			if row[-1] == "-":
+				row[-1] = "Alert:Some Age group don't have any incident for the whole data set!!!!"
+			else:
+				row[-1] += " Some Age group don't have any incident for the whole data set!!!!"
+		i += 1
+	pop_name = [["Population", "Alert"]]
+	pop_name.extend(pop_sum)
+	### Bayesian ends here
+	
+	
 	output = c_merge(age_adj_rate, r_note_col)
 	output_pop = c_merge(output, pop_name)
 
@@ -391,8 +416,10 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	i = 1
 	for col in headerline:
 		#arcpy.AddMessage(col)
-		if col in ["NAME", "state", "county", "tract", "GEOID", "Alert"]:
-			f.writelines("Col" + str(i) + "=" + col + " Text Width 30\n")
+		if col in ["NAME", "state", "county", "tract", "GEOID"]:
+			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 30\n")
+		elif col == "Alert":
+			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 100\n")
 		elif col == "Population":
 			f.writelines("Col" + str(i) + "=" + col + " Long\n")
 		else:
