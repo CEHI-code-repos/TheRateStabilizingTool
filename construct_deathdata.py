@@ -185,7 +185,7 @@ def df_sum(df):
 	return result
 
 # Get prior events and prior population for each age categories in each geographic area
-def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0):  # Set a00 n00 0 for global a0 and n0 calculation
+def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 = 5):  # Set a00 n00 0 for global a0 and n0 calculation
 	pop_mat = col_erase(result, sequence(-1, ncol, -1))
 	case_mat = col_erase(death_count, sequence(-1, ncol, -1))
 	#n_tot = df_sum(pop_mat)
@@ -194,7 +194,7 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0):  # Set a00 
 	c_tot = col_sum(case_mat)
 	lamadj = vector_divide(vector_plus(c_tot, a00), vector_plus(n_tot, n00))
 
-	if n00 == 0:
+	if n00 == 0: # if n00 = 0 we are calculating n00
 		num_col = len(result[0]) - ncol
 		n0 = []
 		i = 0
@@ -207,6 +207,14 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0):  # Set a00 
 			i += 1
 	else:
 		n0 = n00
+	
+	i = 0
+	while i < len(n0):
+		if n0[i] < minimum_n0:
+			n0[i] = minimum_n0
+			arcpy.AddWarning("The " +str(i)+ " age group has 0 prior populations. Using the minimum " + str(minimum_n0))
+		i += 1
+		
 		
 	a0adj = vector_multi(n0, lamadj)
 	return [a0adj, n0]
