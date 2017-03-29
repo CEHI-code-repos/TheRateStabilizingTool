@@ -1,3 +1,16 @@
+version 2.02:
+1. Minor typo fix
+2. Add descriptions to newly added functions 
+
+version 2.01:
+1. Add force exit for neighborhood dictionary when duplicated unique ID presents
+
+version 2.00:
+1. Add new functionalities to calculate first order neighborhood matrix (neighborhood dictionary)
+2. Enable the spatial Bayesian rate stabilizing for counties and census tracts
+3. Bug fix for previous error in Empirical Bayesian stabilizing
+4. Description change for the tool names
+
 version 1.10:
 1. Add number of years parameter. Now the rates in output table are death rate per year.
 

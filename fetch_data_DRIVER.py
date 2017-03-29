@@ -47,7 +47,7 @@ while i < len(r_note_col):
 
 
 # Write raw data from both standard population years and current year into files
-f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + ".data", "w")
+f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + ".data", "w")
 f.write(r_crit_level +'\n')
 f.write(str(r_crit) +'\n')
 f.write(str(age_vector) +'\n')
@@ -59,5 +59,5 @@ f.close()
 
 # Show Message to inform the output of the tool
 arcpy.AddMessage("\nCensus Data was downloaded in File Path:")
-arcpy.AddMessage("Raw Data: " + outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + ".data")
+arcpy.AddMessage("Raw Data: " + outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + ".data")
 arcpy.AddMessage("\nPlease use the output data file in the next step analysis...\n")

@@ -25,6 +25,7 @@ raw_age = str(arcpy.GetParameterAsText(8)) # Get age category, it's the lower bo
 
 nyear = float(arcpy.GetParameterAsText(9)) # Get number of year
 
+
 partial_data = str(arcpy.GetParameterAsText(10)).upper() # Turn on to switch to county only version
 
 state_shp = str(arcpy.GetParameterAsText(11)) # Shapefile for selected state. Optional, only needed when calculate spatial Bayesian 
