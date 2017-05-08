@@ -79,22 +79,6 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 		sc = arcpy.SearchCursor(input_shp)
 		IDlist = dict()
 		row = sc.next()
-	table_view = arcpy.MakeFeatureLayer_management(input_shp, "temp_tv_nghb_dict")
-	del sc
-	del row
-	
-	arcpy.AddMessage("Searching for neighborhoods...")
-	neighbor_dict = dict()
-	i = 0
-	for geoid in IDlist:
-		temp_dict = dict()
-		if not id_type == "String":
-			arcpy.SelectLayerByAttribute_management(table_view,"NEW_SELECTION", GeoIDfield + " = " + str(geoid))
-		else:
-			arcpy.SelectLayerByAttribute_management(table_view,"NEW_SELECTION", GeoIDfield + " = '" + str(geoid)+"'")
-		if selection_type == "First_Order":
-			arcpy.SelectLayerByLocation_management(table_view,"INTERSECT", table_view, selection_type="ADD_TO_SELECTION")
-			sc = arcpy.SearchCursor(table_view)
 		while row is not None:
 			tempid = row.getValue(GeoIDfield)
 			if if_key_exist(tempid, IDlist):
@@ -120,14 +104,20 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 				arcpy.SelectLayerByLocation_management(table_view,"INTERSECT", table_view, selection_type="ADD_TO_SELECTION")
 				sc = arcpy.SearchCursor(table_view)
 				row = sc.next()
-		neighbor_dict[geoid] = temp_dict
-		if i % 100 == 0:
-			arcpy.AddMessage("%.2f" % (float(i)/len(IDlist)*100) + "% Done..." )
-		i += 1
-	
-	arcpy.Delete_management(table_view)	
-	arcpy.AddMessage("Neighborhood dictionary built successfully!!")
-	return neighbor_dict
+				while row is not None:
+					temp_dict[row.getValue(GeoIDfield)] = 1
+					row = sc.next()
+			neighbor_dict[geoid] = temp_dict
+			if i % 100 == 0:
+				arcpy.AddMessage("%.2f" % (float(i)/len(IDlist)*100) + "% Done..." )
+			i += 1
+		
+		arcpy.Delete_management(table_view)
+		arcpy.AddMessage("Neighborhood dictionary built successfully!!")
+		return neighbor_dict
+	except:
+		arcpy.AddError("Please make sure your unique ID is unique!!!")	
+
 
 
 

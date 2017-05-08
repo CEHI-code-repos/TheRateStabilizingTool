@@ -188,6 +188,8 @@ def df_sum(df):
 def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 = 5):  # Set a00 n00 0 for global a0 and n0 calculation
 	pop_mat = col_erase(result, sequence(-1, ncol, -1))
 	case_mat = col_erase(death_count, sequence(-1, ncol, -1))
+	#n_tot = df_sum(pop_mat)
+	#c_tot = df_sum(case_mat)
 	n_tot = col_sum(pop_mat)
 	c_tot = col_sum(case_mat)
 	lamadj = vector_divide(vector_plus(c_tot, a00), vector_plus(n_tot, n00))
@@ -243,9 +245,6 @@ def check_a0_okay(a0):
 
 ### Function to be call by the main core. It is the wrapped function for this module
 def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
-	fa0n0 = open(r"C:\Users\rl53\Desktop\test\RST_Random_Seed_Test\a0n0log.txt", "a")	
-	
-	
 	nyear = float(nyear)
 	arcpy.AddMessage("Constructing disease/death rate from individual records...")
 	## Construct basic matrix for each geographic boundary
@@ -276,8 +275,6 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	###
 	ncol = len(r_note_col[0])
 	[a0, n0] = get_a0_n0 (result[1:], ncol, death_count, 0.1)
-	fa0n0.write("a0: " + str(a0) + "\n")
-	fa0n0.write("n0: " + str(n0) + "\n")
 	incident_alert = not check_a0_okay(a0)
 	#arcpy.AddMessage(str(a0))
 	
@@ -317,7 +314,8 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		rate.append(vector_multi(percent[0], row))
 	age_adj_rate = [["Age_adjust_rate"]]
 	age_adj_rate.extend(col_divide(row_sum(rate),0,nyear))
-
+	
+	
 	if state_shp != "" or ngbh_dict_loc != "":
 		arcpy.AddMessage("Spatial smoothing the results...")
 		
@@ -330,6 +328,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		else:
 			ngbh_dict = df.build_neighborhood_dict (state_shp, GeoID, selection_type = "First_Order")
 
+		
 		i = 0
 		sp_aar_bayesian = []
 		field_name = ["SpBay_AAR", "SpBay_2p5", "SpBay_97p5"]
@@ -359,41 +358,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		sp_aar_bayesian = col_divide(sp_aar_bayesian,1,nyear, True)
 		sp_aar_bayesian = col_divide(sp_aar_bayesian,2,nyear, True)
 		age_adj_rate = c_merge(age_adj_rate, sp_aar_bayesian)
-	
-	###
-	### For Empirical Bayesian
-	###
-	age_adj_rate = c_merge(age_adj_rate, aar_bayesian)
-
-	aver_rate = float(sum(a0)) / sum(n0)
-
-	pop_seq = col_erase(result[1:], sequence(-1, ncol, -1))
-	pop_sum = row_sum(pop_seq)
-	#arcpy.AddMessage(len(pop_sum))
-	#arcpy.AddMessage(len(aar_bayesian))
-	i = 1
-	while i < len(aar_bayesian):
-		row = pop_sum[i-1]
-		if float(aar_bayesian[i][0]) < float(aar_bayesian[i][2])-float(aar_bayesian[i][1]):
-			if state_shp != "" or ngbh_dict_loc != "":
-				if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
-					row.append("Alert:Unreliable Estimate!!!!")
-				else:
-					row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
-			else:
-				row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
-		elif state_shp != "" or ngbh_dict_loc != "":
-			if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
-				row.append("Alert:Unreliable Spatial Bayesian Estimate!!!!")
-			else: 
-				row.append("-")
-		else:
-			row.append("-")
-		i += 1
-	pop_name = [["Population", "Alert"]]
-	pop_name.extend(pop_sum)
-	### Bayesian ends here
-	
+		
 
 	###
 	### For Empirical Bayesian
@@ -477,8 +442,6 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	else:
 		arcpy.AddMessage("Age adjusted rate successfully calculated with no error!!!")
 	
-	
-	fa0n0.close()
 	return (outputfolder + "\\" + "age_adjust_" + filename + ".csv")
 
 
