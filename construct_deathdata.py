@@ -161,9 +161,9 @@ def vect_to_str(vector):
 	result = ""
 	for elem in vector:
 		if(elem == str):
-			result += "\'" + elem + "\', "
+			result += "\'" + elem + "\',"
 		else:
-			result += str(elem) + ", "
+			result += str(elem) + ","
 	result = result[0:len(result)-2]#.replace(" ", "")
 	return result
 	
