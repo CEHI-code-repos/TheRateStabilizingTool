@@ -161,10 +161,10 @@ def vect_to_str(vector):
 	result = ""
 	for elem in vector:
 		if(elem == str):
-			result += "\'" + elem + "\', "
+			result += "\'" + elem + "\',"
 		else:
-			result += str(elem) + ", "
-	result = result[0:len(result)-2].replace(" ", "")
+			result += str(elem) + ","
+	result = result[0:len(result)-2]#.replace(" ", "")
 	return result
 	
 # Sample Gamma function
@@ -185,14 +185,14 @@ def df_sum(df):
 	return result
 
 # Get prior events and prior population for each age categories in each geographic area
-def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0):  # Set a00 n00 0 for global a0 and n0 calculation
+def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 = 5):  # Set a00 n00 0 for global a0 and n0 calculation
 	pop_mat = col_erase(result, sequence(-1, ncol, -1))
 	case_mat = col_erase(death_count, sequence(-1, ncol, -1))
 	n_tot = col_sum(pop_mat)
 	c_tot = col_sum(case_mat)
 	lamadj = vector_divide(vector_plus(c_tot, a00), vector_plus(n_tot, n00))
 
-	if n00 == 0:
+	if n00 == 0: # if n00 = 0 we are calculating n00
 		num_col = len(result[0]) - ncol
 		n0 = []
 		i = 0
@@ -205,6 +205,14 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0):  # Set a00 
 			i += 1
 	else:
 		n0 = n00
+	
+	i = 0
+	while i < len(n0):
+		if n0[i] < minimum_n0:
+			n0[i] = minimum_n0
+			arcpy.AddWarning("The " +str(i)+ " age group has 0 prior populations. Using the minimum " + str(minimum_n0))
+		i += 1
+		
 		
 	a0adj = vector_multi(n0, lamadj)
 	return [a0adj, n0]
@@ -226,6 +234,12 @@ def col_divide(df, ncol, num, header = False):
 		df[i][ncol] /= num
 		i += 1
 	return df
+	
+def check_a0_okay(a0):
+	for a0k in a0:
+		if a0k < 0.000001: # Can't use equals to 0 when comparing float points
+			return False
+	return True
 
 ### Function to be call by the main core. It is the wrapped function for this module
 def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
@@ -264,6 +278,9 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	[a0, n0] = get_a0_n0 (result[1:], ncol, death_count, 0.1)
 	fa0n0.write("a0: " + str(a0) + "\n")
 	fa0n0.write("n0: " + str(n0) + "\n")
+	incident_alert = not check_a0_okay(a0)
+	#arcpy.AddMessage(str(a0))
+	
 	i = 0
 	aar_bayesian = []
 	field_name = ["Baye_AAR", "Baye_2p5", "Baye_97p5"]
@@ -378,6 +395,47 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	### Bayesian ends here
 	
 
+	###
+	### For Empirical Bayesian
+	###
+	age_adj_rate = c_merge(age_adj_rate, aar_bayesian)
+
+	aver_rate = float(sum(a0)) / sum(n0)
+
+	pop_seq = col_erase(result[1:], sequence(-1, ncol, -1))
+	pop_sum = row_sum(pop_seq)
+	#arcpy.AddMessage(len(pop_sum))
+	#arcpy.AddMessage(len(aar_bayesian))
+	i = 1
+	while i < len(aar_bayesian):
+		row = pop_sum[i-1]
+		if float(aar_bayesian[i][0]) < float(aar_bayesian[i][2])-float(aar_bayesian[i][1]):
+			if state_shp != "" or ngbh_dict_loc != "":
+				if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
+					row.append("Alert:Unreliable Estimate!!!!")
+				else:
+					row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
+			else:
+				row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
+		elif state_shp != "" or ngbh_dict_loc != "":
+			if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
+				row.append("Alert:Unreliable Spatial Bayesian Estimate!!!!")
+			else: 
+				row.append("-")
+		else:
+			row.append("-")
+			
+		if incident_alert:
+			if row[-1] == "-":
+				row[-1] = "Alert:Some Age group don't have any incident for the whole data set!!!!"
+			else:
+				row[-1] += " Some Age group don't have any incident for the whole data set!!!!"
+		i += 1
+	pop_name = [["Population", "Alert"]]
+	pop_name.extend(pop_sum)
+	### Bayesian ends here
+	
+	
 	output = c_merge(age_adj_rate, r_note_col)
 	output_pop = c_merge(output, pop_name)
 
@@ -401,8 +459,10 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	i = 1
 	for col in headerline:
 		#arcpy.AddMessage(col)
-		if col in ["NAME", "state", "county", "tract", "GEOID", "Alert"]:
-			f.writelines("Col" + str(i) + "=" + col + " Text Width 30\n")
+		if col in ["NAME", "state", "county", "tract", "GEOID"]:
+			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 30\n")
+		elif col == "Alert":
+			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 100\n")
 		elif col == "Population":
 			f.writelines("Col" + str(i) + "=" + col + " Long\n")
 		else:
