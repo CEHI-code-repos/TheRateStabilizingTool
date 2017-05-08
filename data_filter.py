@@ -84,7 +84,7 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 		else:	
 			IDlist[row.getValue(GeoIDfield)] = 1
 		row = sc.next()
-	table_view = arcpy.MakeFeatureLayer_management(input_shp, "temp_tv")
+	table_view = arcpy.MakeFeatureLayer_management(input_shp, "temp_tv_nghb_dict")
 	del sc
 	del row
 	
@@ -108,8 +108,9 @@ def build_neighborhood_dict (input_shp, GeoIDfield, selection_type = "First_Orde
 		if i % 100 == 0:
 			arcpy.AddMessage("%.2f" % (float(i)/len(IDlist)*100) + "% Done..." )
 		i += 1
-		
-	arcpy.AddMessage("Neighborhood dictonary built successfully!!")
+	
+	arcpy.Delete_management(table_view)	
+	arcpy.AddMessage("Neighborhood dictionary built successfully!!")
 	return neighbor_dict
 
 
