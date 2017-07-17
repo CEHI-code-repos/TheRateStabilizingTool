@@ -286,7 +286,7 @@ def construct_age(ageV, noteV, age_structure):
 def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
 	arcpy.AddMessage("Setting up connections to Census Bureau Server...")
 	## Get Standard structure
-	base_string = "http://api.census.gov/data/{0}/sf1?key={1}&get={2}&for={3}:*{4}"
+	base_string = "https://api.census.gov/data/{0}/sf1?key={1}&get={2}&for={3}:*{4}"
 
 	# Map fields (convert field name to meaningful number)
 	age_exp = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,105,110]
