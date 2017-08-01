@@ -1,3 +1,6 @@
+version 2.04:
+1. Change the call from HTTP to HTTPS
+
 version 2.03:
 1. Fix the bug of joining result to boundaries by remove the spaces between commas. 
 

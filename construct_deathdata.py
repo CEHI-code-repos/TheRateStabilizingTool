@@ -164,7 +164,7 @@ def vect_to_str(vector):
 			result += "\'" + elem + "\',"
 		else:
 			result += str(elem) + ","
-	result = result[0:len(result)-2]#.replace(" ", "")
+	result = result[0:len(result)-1]#.replace(" ", "")
 	return result
 	
 # Sample Gamma function
@@ -262,7 +262,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	errorID = []
 	for row in cursor:
 		temp_ID = str(row.getValue(id_field))
-		temp_age = row.getValue(age_field)
+		temp_age = float(row.getValue(age_field))
 		if(not if_key_exist(temp_ID, death_count_dict)):
 			errorID.append(temp_ID)
 		else:
@@ -288,7 +288,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		j = 0
 		age_group = []
 		while j < num_count:
-			g_samps_per = vector_multi(gamma_sample(Y[j] + a0[j], 1.0/(n[j] + n0[j]), 1000), percent[0][j])
+			g_samps_per = vector_multi(gamma_sample(Y[j] + a0[j], 1.0/(n[j] + n0[j]), 5000), percent[0][j])
 			age_group.append(g_samps_per)
 			j += 1
 		aar_bayesian.append(sample_percentile(col_sum(age_group), [0.5, 0.025, 0.975]))
@@ -348,7 +348,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			j = 0
 			sp_age_group = []
 			while j < num_count:
-				sp_g_samps_per = vector_multi(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 1000), percent[0][j])
+				sp_g_samps_per = vector_multi(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000), percent[0][j])
 				sp_age_group.append(sp_g_samps_per)
 				j += 1
 			sp_aar_bayesian.append(sample_percentile(col_sum(sp_age_group), [0.5, 0.025, 0.975]))
