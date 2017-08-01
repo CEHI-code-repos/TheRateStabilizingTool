@@ -262,7 +262,14 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	errorID = []
 	for row in cursor:
 		temp_ID = str(row.getValue(id_field))
-		temp_age = float(row.getValue(age_field))
+		temp_age_check = row.getValue(age_field)
+		
+		try: 
+			 temp_age = float(temp_age_check)
+		except ValueError:
+			arcpy.AddWarning('Age input for ID ' + temp_ID + ' is \''+ str(temp_age_check) + '\'!! Clean data or Program will consider this age as 0!!!')
+			temp_age = 0
+			
 		if(not if_key_exist(temp_ID, death_count_dict)):
 			errorID.append(temp_ID)
 		else:
