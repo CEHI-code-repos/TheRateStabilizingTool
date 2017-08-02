@@ -1,3 +1,9 @@
+version 2.05:
+1.Fix the bug when input age is string
+
+2.Fix the bug the last field will lose 1 digit
+3.Add warning message when age input is invalid 
+
 version 2.04:
 1. Change the call from HTTP to HTTPS
 
