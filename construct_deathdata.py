@@ -13,6 +13,37 @@ def if_key_exist (key, dictionary):
 	except KeyError:
 		return False
 	
+# Function to Push a word from a comma separated string
+def push_word(string):
+	i = 0
+	quote = False
+	while i < len(string):
+		if quote:
+			if string[i] == "\"" or string[i] == "\'":
+				return [string[1:i], string[i+1:]]
+			else:
+				i += 1
+		else:
+			if(string[i] == "\"" or string[i] == "\'"):
+				quote = True
+			elif string[i] == "," or string[i] == "]" or string[i] == '\n':
+				return [string[0:i], string[i:]]
+			i += 1
+	if(i < len(string)):
+		return [string[0+i], string[i+1:]]
+	else:
+		return [string, '']
+	
+def index_field(string, field_name):
+	i = 0
+	[current, string] = push_word(string)
+	while current != "":
+		if (current == field_name):
+			return i
+		[current, string] = push_word(string[1:])
+		i += 1
+	return NameError('No Field Found')	
+
 # Generate a sequence of number
 def sequence(start, length, step=1):
 	result = []
@@ -246,6 +277,21 @@ def check_a0_okay(a0):
 ### Function to be call by the main core. It is the wrapped function for this module
 def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
 	nyear = float(nyear)
+	
+	input_ext =  os.path.splitext(os.path.split(inputdata)[1])[1]
+	if input_ext == '.csv':
+		temp_f = open(inputdata, 'r')
+		header_string = temp_f.readline().replace('\n', '')
+		temp_f.close()
+		
+		id_id = index_field(header_string, id_field)
+		
+		f = open(os.path.split(inputdata)[0] + '\\schema.ini', 'a')
+		f.write('['+ os.path.split(inputdata)[1] +']\n')
+		f.write('Col{0}={1} Text Width 30\n'.format(id_id+1, id_field))
+		f.close()
+		
+	
 	arcpy.AddMessage("Constructing disease/death rate from individual records...")
 	## Construct basic matrix for each geographic boundary
 	num_count = len(percent[0])
@@ -284,7 +330,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	[a0, n0] = get_a0_n0 (result[1:], ncol, death_count, 0.1)
 	incident_alert = not check_a0_okay(a0)
 	#arcpy.AddMessage(str(a0))
-	
+
 	i = 0
 	aar_bayesian = []
 	field_name = ["Baye_AAR", "Baye_2p5", "Baye_97p5"]
@@ -321,8 +367,8 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		rate.append(vector_multi(percent[0], row))
 	age_adj_rate = [["Age_adjust_rate"]]
 	age_adj_rate.extend(col_divide(row_sum(rate),0,nyear))
-	
-	
+
+
 	if state_shp != "" or ngbh_dict_loc != "":
 		arcpy.AddMessage("Spatial smoothing the results...")
 		
@@ -406,8 +452,8 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	pop_name = [["Population", "Alert"]]
 	pop_name.extend(pop_sum)
 	### Bayesian ends here
-	
-	
+
+
 	output = c_merge(age_adj_rate, r_note_col)
 	output_pop = c_merge(output, pop_name)
 
