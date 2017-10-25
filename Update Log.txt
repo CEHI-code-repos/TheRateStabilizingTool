@@ -1,3 +1,9 @@
+version 2.10:
+1. Changed the method of prior selection to Y0=6 instead of 10th percentile of N
+2. Add new function to make sure population is at least equal or larger than the case count for each age group
+3. Removed incident alert when some age group don't have enough any cases; instead it throws error message that require the user to regroup the age.
+4. Add Average rate display for the whole input data.
+
 version 2.06:
 1. Add CSV support when input data is csv
 
