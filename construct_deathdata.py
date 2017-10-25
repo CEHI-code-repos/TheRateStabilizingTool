@@ -337,11 +337,10 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		arcpy.AddError("Some age group don't have any case in it!!! Please summarize your data based on the age and then redesign your age group.")
 
 	###
-	### For Empirical Bayesian 
+	### For non-spatial Bayesian 
 	###
 	ncol = len(r_note_col[0])
 	[a0, n0] = get_a0_n0 (result[1:], ncol, death_count, percent[0])
-	incident_alert = not check_a0_okay(a0)
 	#arcpy.AddMessage(str(a0))
 
 	i = 0
@@ -442,11 +441,11 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		
 
 	###
-	### For Empirical Bayesian
+	### For non-spatial Bayesian
 	###
 	age_adj_rate = c_merge(age_adj_rate, aar_bayesian)
 
-	aver_rate = float(sum(a0)) / sum(n0)
+	avg_rate = sum(vector_multi(vector_divide(a0, n0), percent[0]))/nyear * 100000
 
 	pop_seq = col_erase(result[1:], sequence(-1, ncol, -1))
 	pop_sum = row_sum(pop_seq)
@@ -460,7 +459,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 				if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
 					row.append("Alert:Unreliable Estimate!!!!")
 				else:
-					row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
+					row.append("Alert:Unreliable non-Spatial Bayesian Estimate!!!!")
 			else:
 				row.append("Alert:Unreliable non-Spatial Bayesian Estimate!!!!")
 		elif state_shp != "" or ngbh_dict_loc != "":
@@ -471,11 +470,6 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		else:
 			row.append("-")
 			
-		if incident_alert:
-			if row[-1] == "-":
-				row[-1] = "Alert:Some Age group don't have any incident for the whole data set!!!!"
-			else:
-				row[-1] += " Some Age group don't have any incident for the whole data set!!!!"
 		i += 1
 	pop_name = [["Population", "Alert"]]
 	pop_name.extend(pop_sum)
@@ -522,7 +516,8 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		arcpy.AddWarning("Warning: Following ID is not identified in census data: " + str(errorID) + "!!!")
 	else:
 		arcpy.AddMessage("Age adjusted rate successfully calculated with no error!!!")
-	
+		
+	arcpy.AddMessage("The average rate for the area is " + str(avg_rate) + ' cases per 100,000')
 	return (outputfolder + "\\" + "age_adjust_" + filename + ".csv")
 
 
