@@ -237,8 +237,9 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 =
 			each_n = n_tot[i]
 			#print each_n
 			if each_n == 0:
-				arcpy.AddMessage('!!!')
-				lamadj.append(lam[i])
+				#arcpy.AddMessage('!!!')
+				#arcpy.AddMessage(float(a00[i])/n00[i])
+				lamadj.append(float(a00[i])/n00[i])
 			else:
 				omega = min(float(each_n)/n00[i], 0.99)
 				lamadj.append(omega*c_tot[i]/each_n + (1-omega)*a00[i]/n00[i])
