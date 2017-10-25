@@ -217,37 +217,35 @@ def df_sum(df):
 
 # Get prior events and prior population for each age categories in each geographic area
 def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 = 5):  # Set a00 n00 0 for global a0 and n0 calculation
+	Y_prior = 6
 	pop_mat = col_erase(result, sequence(-1, ncol, -1))
 	case_mat = col_erase(death_count, sequence(-1, ncol, -1))
 	#n_tot = df_sum(pop_mat)
 	#c_tot = df_sum(case_mat)
 	n_tot = col_sum(pop_mat)
 	c_tot = col_sum(case_mat)
-	lamadj = vector_divide(vector_plus(c_tot, a00), vector_plus(n_tot, n00))
+	lam = vector_divide(c_tot, n_tot)
 
+	a0adj = vector_multi(percentile, Y_prior)
+	
 	if n00 == 0: # if n00 = 0 we are calculating n00
-		num_col = len(result[0]) - ncol
+		n0 = vector_divide(a0adj, lam)
+	else:
+		lamadj = []
 		n0 = []
 		i = 0
-		while i < num_col:
-			temp = []
-			for row in pop_mat:
-				temp.append(row[i])
-			s_temp = sorted(temp)
-			n0.append(s_temp[int(percentile * len(result))])
+		while i < len(n_tot):
+			each_n = n_tot[i]
+			print each_n
+			if each_n == 0:
+				arcpy.AddMessage('!!!')
+				lamadj.append(lam[i])
+			else:
+				omega = min(float(each_n)/n00[i], 0.99)
+				lamadj.append(omega*c_tot[i]/each_n + (1-omega)*a00[i]/n00[i])
 			i += 1
-	else:
-		n0 = n00
+		n0 = vector_divide(a0adj, lamadj)
 	
-	i = 0
-	while i < len(n0):
-		if n0[i] < minimum_n0:
-			n0[i] = minimum_n0
-			arcpy.AddWarning("The " +str(i)+ " age group has 0 prior populations. Using the minimum " + str(minimum_n0))
-		i += 1
-		
-		
-	a0adj = vector_multi(n0, lamadj)
 	return [a0adj, n0]
 	
 # Sample the vector based on percentile, Unit in /100,000people
@@ -273,11 +271,23 @@ def check_a0_okay(a0):
 		if a0k < 0.000001: # Can't use equals to 0 when comparing float points
 			return False
 	return True
+	
+def check_age_group_case_count(death_count, dataCol_cnt):
+	result = death_count[0][0:dataCol_cnt]
+	i = 1
+	while i < len(death_count):
+		result = vector_plus(result, death_count[i][0:dataCol_cnt])
+		#print result
+		if not 0.0 in result:
+			return True
+		i += 1
+	return False
+	
 
 ### Function to be call by the main core. It is the wrapped function for this module
 def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, state_shp="", GeoID="", ngbh_dict_loc=""):
 	nyear = float(nyear)
-	
+
 	input_ext =  os.path.splitext(os.path.split(inputdata)[1])[1]
 	if input_ext == '.csv':
 		temp_f = open(inputdata, 'r')
@@ -291,7 +301,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		f.write('Col{0}={1} Text Width 30\n'.format(id_id+1, id_field))
 		f.close()
 		
-	
+
 	arcpy.AddMessage("Constructing disease/death rate from individual records...")
 	## Construct basic matrix for each geographic boundary
 	num_count = len(percent[0])
@@ -322,12 +332,15 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			idx = index_age(temp_age, header_zero)
 			if(idx != -1):
 				death_count_dict[temp_ID][idx] += 1
+				
+	if not check_age_group_case_count(death_count, len(death_count[0])-len(r_note_col[0])):
+		arcpy.AddError("Some age group don't have any case in it!!! Please summarize your data based on the age and then redesign your age group.")
 
 	###
 	### For Empirical Bayesian 
 	###
 	ncol = len(r_note_col[0])
-	[a0, n0] = get_a0_n0 (result[1:], ncol, death_count, 0.1)
+	[a0, n0] = get_a0_n0 (result[1:], ncol, death_count, percent[0])
 	incident_alert = not check_a0_okay(a0)
 	#arcpy.AddMessage(str(a0))
 
@@ -394,7 +407,8 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			death_with_header.extend(death_count)
 			[temp_death, temp_dcol] = df.filter_with_dict (death_with_header, r_note_col, "GEOID", data_list_dict, cnty_filter = False)
 
-			[a0i, n0i] = get_a0_n0 (temp_result[1:], ncol, temp_death[1:], 0.1, a0, n0)
+			arcpy.AddMessage(Geokey)
+			[a0i, n0i] = get_a0_n0 (temp_result[1:], ncol, temp_death[1:], percent[0], a0, n0)
 			
 			Y = death_count[i][0:num_count]
 			n = result[i+1][0:num_count]
@@ -434,7 +448,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 				else:
 					row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
 			else:
-				row.append("Alert:Unreliable Empirical Bayesian Estimate!!!!")
+				row.append("Alert:Unreliable non-Spatial Bayesian Estimate!!!!")
 		elif state_shp != "" or ngbh_dict_loc != "":
 			if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
 				row.append("Alert:Unreliable Spatial Bayesian Estimate!!!!")
