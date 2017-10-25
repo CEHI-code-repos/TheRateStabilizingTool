@@ -232,11 +232,10 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 =
 		n0 = vector_divide(a0adj, lam)
 	else:
 		lamadj = []
-		n0 = []
 		i = 0
 		while i < len(n_tot):
 			each_n = n_tot[i]
-			print each_n
+			#print each_n
 			if each_n == 0:
 				arcpy.AddMessage('!!!')
 				lamadj.append(lam[i])
@@ -351,6 +350,12 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	while i < len(death_count):
 		Y = death_count[i][0:num_count]
 		n = result[i+1][0:num_count]
+		# Make sure n is always equal or larger than Y
+		k = 0
+		while k < len(n):
+			n[k]=max(Y[k],n[k])
+			k += 1
+		
 		j = 0
 		age_group = []
 		while j < num_count:
@@ -401,6 +406,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		sp_aar_bayesian.append(field_name)
 		while i < len(death_count):
 			Geokey = result[i+1][-1]
+			
 			data_list_dict = ngbh_dict[Geokey]
 			[temp_result, temp_col] = df.filter_with_dict (result, r_note_col, "GEOID", data_list_dict, cnty_filter = False)
 			death_with_header = [result[0]]
@@ -412,6 +418,13 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			
 			Y = death_count[i][0:num_count]
 			n = result[i+1][0:num_count]
+			
+			# Make sure n is always equal or larger than Y
+			k = 0
+			while k < len(n):
+				n[k]=max(Y[k],n[k])
+				k += 1
+
 			j = 0
 			sp_age_group = []
 			while j < num_count:
