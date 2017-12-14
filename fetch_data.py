@@ -383,7 +383,18 @@ def summarize_to_age_structure (age_vector, age_exp, r_num_table, r_note_col, ag
 			requested_age_pop.append(row_age)
 		else:
 			header = False
-
+	
+	i = 0
+	for each_element in age_structure:
+		if i < len(age_structure) and i > 0:
+			age_structure[i-1] = 'age' + str(age_structure[i-1]) + '_' + str(abs(each_element))
+			if i == len(age_structure) - 1:
+				if int(each_element) < 0:
+					age_structure.remove(each_element)
+				else:
+					age_structure[i] = 'age' + str(each_element) + 'p'
+		i += 1
+	
 	r_age_pop_table = [age_structure]
 	r_age_pop_table.extend(requested_age_pop)
 	result = c_merge(r_age_pop_table, r_note_col)
