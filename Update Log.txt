@@ -1,3 +1,6 @@
+version 2.11:
+1. Add new function to generate population breakdown for each census unit.
+
 version 2.10:
 1. Changed the method of prior selection to Y0=6 instead of 10th percentile of N
 2. Add new function to make sure population is at least equal or larger than the case count for each age group
