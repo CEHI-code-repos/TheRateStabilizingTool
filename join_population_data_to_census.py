@@ -45,15 +45,31 @@ r_note_col = json.loads(part1_input.readline().replace("\n","").replace("\'", "\
 
 [result, percent] = fd.summarize_to_age_structure (age_vector, age_exp, r_num_table, r_note_col, age_structure)
 
+i = 0
+age_structure_note = []
+age_structure_note.extend(age_structure)
+for each_element in age_structure_note:
+	if i < len(age_structure_note) and i > 0:
+		age_structure_note[i-1] = 'age' + str(age_structure_note[i-1]) + '_' + str(abs(each_element))
+		if i == len(age_structure_note) - 1:
+			if int(each_element) < 0:
+				age_structure_note.remove(each_element)
+			else:
+				age_structure_note[i] = 'age' + str(each_element) + 'p'
+	i += 1
+	
+
 # Write population matrix, and standard population structure into files
 outfilename = "PopAge_structure_" + os.path.splitext(os.path.split(raw_data)[1])[0].split('_')[1] + '_'  + os.path.splitext(os.path.split(raw_data)[1])[0].split('_')[2] + ".csv"
 f = open(outputfolder + "\\" + outfilename, "w")
 head = True
 for row in result:
 	if head:
-		headerline = row
+		headerline = age_structure_note + row[len(age_structure_note):]
 		head = False
-	temp_text = cd.vect_to_str(row)
+		temp_text = cd.vect_to_str(headerline)
+	else:
+		temp_text = cd.vect_to_str(row)
 	f.writelines(temp_text + "\n")
 f.close()
 
