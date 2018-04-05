@@ -413,7 +413,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			death_with_header.extend(death_count)
 			[temp_death, temp_dcol] = df.filter_with_dict (death_with_header, r_note_col, "GEOID", data_list_dict, cnty_filter = False)
 
-			arcpy.AddMessage(Geokey)
+			#arcpy.AddMessage(Geokey)
 			[a0i, n0i] = get_a0_n0 (temp_result[1:], ncol, temp_death[1:], percent[0], a0, n0)
 			
 			Y = death_count[i][0:num_count]
@@ -458,20 +458,32 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			if state_shp != "" or ngbh_dict_loc != "":
 				if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
 					row.append("Alert:Unreliable Estimate!!!!")
+					row.append(1)
+					row.append(1)
 				else:
 					row.append("Alert:Unreliable non-Spatial Bayesian Estimate!!!!")
+					row.append(1)
+					row.append(0)
 			else:
 				row.append("Alert:Unreliable non-Spatial Bayesian Estimate!!!!")
+				row.append(1)
 		elif state_shp != "" or ngbh_dict_loc != "":
 			if float(sp_aar_bayesian[i][0]) < float(sp_aar_bayesian[i][2])-float(sp_aar_bayesian[i][1]):
 				row.append("Alert:Unreliable Spatial Bayesian Estimate!!!!")
+				row.append(0)
+				row.append(1)
 			else: 
 				row.append("-")
+				row.append(0)
+				row.append(0)
 		else:
 			row.append("-")
+			row.append(0)
 			
 		i += 1
-	pop_name = [["Population", "Alert"]]
+	pop_name = [["Population", "Alert", "NSpUnreli"]]
+	if state_shp != "" or ngbh_dict_loc != "":
+		pop_name[0].append("SpUnreli")
 	pop_name.extend(pop_sum)
 	### Bayesian ends here
 
@@ -503,7 +515,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 30\n")
 		elif col == "Alert":
 			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 100\n")
-		elif col == "Population":
+		elif col in ["Population", "NSpUnreli", "SpUnreli"]:
 			f.writelines("Col" + str(i) + "=" + col + " Long\n")
 		else:
 			f.writelines("Col" + str(i) + "=" + col + " Double\n")

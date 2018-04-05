@@ -1,5 +1,9 @@
+version 2.15:
+1. Added instruction to simulate point level data from aggregate data
+2. Added 2 fields in the outcome table to indicate whether spatial or non-spatial Bayesian estimate are unreliable
+
 version 2.11:
-1. Add new function to generate population breakdown for each census unit.
+1. Added new function to generate population breakdown for each census unit.
 
 version 2.10:
 1. Changed the method of prior selection to Y0=6 instead of 10th percentile of N
