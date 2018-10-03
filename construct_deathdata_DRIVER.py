@@ -97,7 +97,8 @@ if(age_structure[0] < 0): # Maximum of one cap per request
 sys.path.append(os.path.split(os.path.realpath(__file__))[0])
 import fetch_data as fd # This module fetching data from Census Bureau
 fd = reload(fd) # Make sure newest module is loaded
-import construct_deathdata as cd # This module calculate rates from input data and fetched population data
+#import construct_deathdata as cd # This module calculate rates from input data and fetched population data
+import construct_deathdata_test_for_unsmooth_percentile as cd # This module calculate rates from input data and fetched population data
 cd = reload(cd) # Make sure newest module is loaded
 import data_filter as df # This module filtered the result based on input
 df = reload(df) # Make sure newest module is loaded
