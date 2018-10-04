@@ -1,6 +1,6 @@
-import os, sys, arcpy, json
+import os, sys, arcpy, json, importlib
 import data_filter as df # This module filtered the result based on input
-df = reload(df) # Make sure newest module is loaded
+df = importlib.reload(df) # Make sure newest module is loaded
 
 state_shp = str(arcpy.GetParameterAsText(0)) # Shapefile for selected state. Optional, only needed when calculate spatial Bayesian 
 

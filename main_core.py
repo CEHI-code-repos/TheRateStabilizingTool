@@ -1,4 +1,4 @@
-import os, sys, arcpy
+import os, sys, arcpy, importlib
 # Please Ignore, Original Test Parameters:
 #inputdata = r"C:\Users\lruiyang\Desktop\Age_Adjusted_rate_tool\fake_death.dbf"
 #outputfolder = r"C:\Users\lruiyang\Desktop\Age_Adjusted_rate_tool"
@@ -109,11 +109,11 @@ r_crit = map_state[r_crit_state]
 # Import Modules
 sys.path.append(os.path.split(os.path.realpath(__file__))[0])
 import fetch_data as fd # This module fetching data from Census Bureau
-fd = reload(fd) # Make sure newest module is loaded
+fd = importlib.reload(fd) # Make sure newest module is loaded
 import construct_deathdata as cd # This module calculate rates from input data and fetched population data
-cd = reload(cd) # Make sure newest module is loaded
+cd = importlib.reload(cd) # Make sure newest module is loaded
 import data_filter as df # This module filtered the result based on input
-df = reload(df) # Make sure newest module is loaded
+df = importlib.reload(df) # Make sure newest module is loaded
 
 # Call fetch_data function in fd module. This module return the population matrix for each geographic unit 
 # ,and the age structure (percentage of each age group) 
