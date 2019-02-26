@@ -1,6 +1,7 @@
 ### Fetch Data from Census
 import arcpy, urllib.request #urllib2
 from operator import itemgetter
+import time
 
 
 # Callback function for next function
@@ -186,7 +187,22 @@ def merge_array_elements (array, index_vector):
     
 # Fetch and Construct table from returns
 def fetch_construct(request):
-    response = urllib.request.urlopen(request)
+    restart = False
+    first = True
+    while (first or restart):
+        try:
+            first = False
+            response = urllib.request.urlopen(request)
+            if restart == True:
+                arcpy.AddWarning("Retry Successful!")
+                restart = False
+        except urllib.error.HTTPError as e:
+            #arcpy.AddMessage(request)
+            arcpy.AddWarning(e)
+            arcpy.AddWarning("Restarting Download in 5 seconds...")
+            restart = True
+            time.sleep(5)
+
     unformData = response.read().decode('utf-8')
     [censusdata, resid] = construct_list(unformData, list())
     if resid != "":
@@ -288,11 +304,19 @@ def construct_age(ageV, noteV, age_structure):
         structed_age.append(temp)
     return [structed_age, actstruct]
     
+def clean_note_col(r_note_col):
+    i = 0
+    while i < len(r_note_col):
+        row = r_note_col[i]
+        j = 0
+        while j < len(row):
+            row[j] = row[j].replace(',',';')
+            j += 1
+        i += 1
+    return r_note_col
     
 def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     arcpy.AddMessage("Setting up connections to Census Bureau Server...")
-    ## Get Standard structure
-    base_string = "https://api.census.gov/data/{0}/sf1?key={1}&get={2}&for={3}:*{4}"
 
     # Map fields (convert field name to meaningful number)
     age_exp = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,105,110]
@@ -304,16 +328,22 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     sf2000_f = ["PCT012107","PCT012108","PCT012109","PCT012110","PCT012111","PCT012112","PCT012113","PCT012114","PCT012115","PCT012116","PCT012117","PCT012118","PCT012119","PCT012120","PCT012121","PCT012122","PCT012123","PCT012124","PCT012125","PCT012126","PCT012127","PCT012128","PCT012129","PCT012130","PCT012131","PCT012132","PCT012133","PCT012134","PCT012135","PCT012136","PCT012137","PCT012138","PCT012139","PCT012140","PCT012141","PCT012142","PCT012143","PCT012144","PCT012145","PCT012146","PCT012147","PCT012148","PCT012149","PCT012150","PCT012151","PCT012152","PCT012153","PCT012154","PCT012155","PCT012156","PCT012157","PCT012158","PCT012159","PCT012160","PCT012161","PCT012162","PCT012163","PCT012164","PCT012165","PCT012166","PCT012167","PCT012168","PCT012169","PCT012170","PCT012171","PCT012172","PCT012173","PCT012174","PCT012175","PCT012176","PCT012177","PCT012178","PCT012179","PCT012180","PCT012181","PCT012182","PCT012183","PCT012184","PCT012185","PCT012186","PCT012187","PCT012188","PCT012189","PCT012190","PCT012191","PCT012192","PCT012193","PCT012194","PCT012195","PCT012196","PCT012197","PCT012198","PCT012199","PCT012200","PCT012201","PCT012202","PCT012203","PCT012204","PCT012205","PCT012206","PCT012207","PCT012208","PCT012209"]
     sf2000_m = ["PCT012003","PCT012004","PCT012005","PCT012006","PCT012007","PCT012008","PCT012009","PCT012010","PCT012011","PCT012012","PCT012013","PCT012014","PCT012015","PCT012016","PCT012017","PCT012018","PCT012019","PCT012020","PCT012021","PCT012022","PCT012023","PCT012024","PCT012025","PCT012026","PCT012027","PCT012028","PCT012029","PCT012030","PCT012031","PCT012032","PCT012033","PCT012034","PCT012035","PCT012036","PCT012037","PCT012038","PCT012039","PCT012040","PCT012041","PCT012042","PCT012043","PCT012044","PCT012045","PCT012046","PCT012047","PCT012048","PCT012049","PCT012050","PCT012051","PCT012052","PCT012053","PCT012054","PCT012055","PCT012056","PCT012057","PCT012058","PCT012059","PCT012060","PCT012061","PCT012062","PCT012063","PCT012064","PCT012065","PCT012066","PCT012067","PCT012068","PCT012069","PCT012070","PCT012071","PCT012072","PCT012073","PCT012074","PCT012075","PCT012076","PCT012077","PCT012078","PCT012079","PCT012080","PCT012081","PCT012082","PCT012083","PCT012084","PCT012085","PCT012086","PCT012087","PCT012088","PCT012089","PCT012090","PCT012091","PCT012092","PCT012093","PCT012094","PCT012095","PCT012096","PCT012097","PCT012098","PCT012099","PCT012100","PCT012101","PCT012102","PCT012103","PCT012104","PCT012105"]
 
+    
+    ## Get Standard structure
+    if base_year == "2010":  # 2010 Oct update on Census 2010 changed the base string structure
+        base_string = "https://api.census.gov/data/{0}/dec/sf1?key={1}&get={2}&for={3}:*{4}"
+    elif base_year == "2000":
+        base_string = "https://api.census.gov/data/{0}/sf1?key={1}&get={2}&for={3}:*{4}"
 
     # Population by age is in field PCT0120003 to PCT0120209 for 2010, PCT012003 to PCT012209 for 2000
     #geolevel = "tract"
-    #criteria = "&in=state:48"
+    #criteria = "&in=state:48%20county:001"  # Sample call structure for tract level 
     geolevel = "state"
     criteria = ""
 
-    if base_year == "2010":
-        field_m = sf2010_m
-        field_f = sf2010_f
+    if base_year == "2010": # Census changed it back to the same variable name in Oct.2018. Keep the old one in case it changed back.
+        field_m = sf2000_m
+        field_f = sf2000_f
     elif base_year == "2000":
         field_m = sf2000_m
         field_f = sf2000_f
@@ -339,9 +369,9 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     # Fetch data for rate calculation
     r_criteria = "&in=" + r_crit_level + ":" + r_crit
 
-    if r_year == "2010":
-        field_m = sf2010_m
-        field_f = sf2010_f
+    if r_year == "2010": # Census changed it back to the same variable name in Oct.2018. Keep the old one in case it changed back.
+        field_m = sf2000_m
+        field_f = sf2000_f
     elif r_year == "2000":
         field_m = sf2000_m
         field_f = sf2000_f
@@ -360,15 +390,44 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     while i >= key_level:
         key_col.append(i)
         i -= 1
-    
-    arcpy.AddMessage("Fetching Male data...")
-    pop_table_m = construct_pop_table (r_year, base_string, field_m, r_geolevel, r_criteria, key_level)
-    arcpy.AddMessage("Fetching Female data...")
-    pop_table_f = construct_pop_table (r_year, base_string, field_f, r_geolevel, r_criteria, key_level)
+   
+    if r_year == "2010" and r_geolevel == "tract":  # 2010 Oct Census update can't get all counties, has to loop through
+        arcpy.AddMessage("Fetching county code...")
+        cnty_code_request = base_string.format(r_year, get_api_key(), "NAME", "county", r_criteria)
+        cnty_code_df = fetch_construct(cnty_code_request)
+        cnty_codes = []
+        for each_row in cnty_code_df[1:]:
+            cnty_codes.append(each_row[-1])
+        
+        pop_table_m = ""
+        pop_table_f = ""
+        for each_cnty_code in cnty_codes:
+            r_criteria_cnty = r_criteria + "%20county:" + each_cnty_code
+            
+            arcpy.AddMessage("Fetching Male data for county "+each_cnty_code+"...")
+            pop_table_m_temp = construct_pop_table (r_year, base_string, field_m, r_geolevel, r_criteria_cnty, key_level)
+            if pop_table_m == "":
+                pop_table_m = pop_table_m_temp
+            else:
+                pop_table_m.extend(pop_table_m_temp[1:])
+            
+            arcpy.AddMessage("Fetching Female data for county "+each_cnty_code+"...")
+            pop_table_f_temp = construct_pop_table (r_year, base_string, field_f, r_geolevel, r_criteria_cnty, key_level)
+            if pop_table_f == "":
+                pop_table_f = pop_table_m_temp
+            else:
+                pop_table_f.extend(pop_table_m_temp[1:])
+   
+    else:    
+        arcpy.AddMessage("Fetching Male data...")
+        pop_table_m = construct_pop_table (r_year, base_string, field_m, r_geolevel, r_criteria, key_level)
+        arcpy.AddMessage("Fetching Female data...")
+        pop_table_f = construct_pop_table (r_year, base_string, field_f, r_geolevel, r_criteria, key_level)
 
     r_num_m = col_erase(pop_table_m, key_col)
     r_num_f = col_erase(pop_table_f, key_col)
     r_note_col = col_erase(pop_table_m, sequence(0, len(pop_table_m[0])+ key_level))
+    r_note_col = clean_note_col(r_note_col)
     r_num_table = df_addition(r_num_m, r_num_f)
     return [age_vector, age_exp, r_num_table, r_note_col]
     
