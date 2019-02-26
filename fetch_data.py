@@ -1,5 +1,5 @@
 ### Fetch Data from Census
-import arcpy, urllib.request #urllib2
+import urllib2, arcpy
 from operator import itemgetter
 import time
 
@@ -192,7 +192,7 @@ def fetch_construct(request):
     while (first or restart):
         try:
             first = False
-            response = urllib.request.urlopen(request)
+            response = urllib2.urlopen(request)
             if restart == True:
                 arcpy.AddWarning("Retry Successful!")
                 restart = False

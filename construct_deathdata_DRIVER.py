@@ -1,4 +1,4 @@
-import os, sys, arcpy, json, importlib
+import os, sys, arcpy, json
 # Please Ignore, Original Test Parameters:
 #inputdata = r"C:\Users\lruiyang\Desktop\Age_Adjusted_rate_tool\fake_death.dbf"
 #outputfolder = r"C:\Users\lruiyang\Desktop\Age_Adjusted_rate_tool"
@@ -96,12 +96,12 @@ if(age_structure[0] < 0): # Maximum of one cap per request
 # Import Modules
 sys.path.append(os.path.split(os.path.realpath(__file__))[0])
 import fetch_data as fd # This module fetching data from Census Bureau
-fd = importlib.reload(fd) # Make sure newest module is loaded
+fd = reload(fd) # Make sure newest module is loaded
 #import construct_deathdata as cd # This module calculate rates from input data and fetched population data
 import construct_deathdata_test_for_unsmooth_percentile as cd # This module calculate rates from input data and fetched population data
-cd = importlib.reload(cd) # Make sure newest module is loaded
+cd = reload(cd) # Make sure newest module is loaded
 import data_filter as df # This module filtered the result based on input
-df = importlib.reload(df) # Make sure newest module is loaded
+df = reload(df) # Make sure newest module is loaded
 
 # Read local data fetched from 1st step 
 part1_input=open(raw_data, 'r')
