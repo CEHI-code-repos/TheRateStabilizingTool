@@ -1,4 +1,4 @@
-import os, arcpy, numpy, numbers, ast, importlib
+import os, arcpy, numpy, numbers, ast, bisect, importlib
 import datetime as dt
 from operator import itemgetter
 import data_filter as df # This module filtered the result based on input
@@ -336,6 +336,26 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	if not check_age_group_case_count(death_count, len(death_count[0])-len(r_note_col[0])):
 		arcpy.AddError("Some age group don't have any case in it!!! Please summarize your data based on the age and then redesign your age group.")
 
+		
+	arcpy.AddMessage("Calculating age adjusted rate...")
+	# Calculate Age adjusted rate for each county
+	i = 1
+	num_rate = []
+	while i < len(result):
+		key_id = r_note_col[i][len(r_note_col[0])-1]
+		num_rate.append(vector_multi(vector_divide(death_count_dict[key_id][0:num_count], result[i][0:num_count]), 100000))
+		i += 1
+
+	rate = []
+	for row in num_rate:
+		rate.append(vector_multi(percent[0], row))
+	age_adj_rate = [["Age_adjust_rate"]]
+	age_adj_rate.extend(col_divide(row_sum(rate),0,nyear))
+	ratesum = row_sum(rate)
+		
+
+	unsmooth_pctl_ns = [['ns_percentile']]
+
 	###
 	### For non-spatial Bayesian 
 	###
@@ -355,7 +375,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		while k < len(n):
 			n[k]=max(Y[k],n[k])
 			k += 1
-		
+
 		j = 0
 		age_group = []
 		while j < num_count:
@@ -363,6 +383,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 			age_group.append(g_samps_per)
 			j += 1
 		aar_bayesian.append(sample_percentile(col_sum(age_group), [0.5, 0.025, 0.975]))
+		unsmooth_pctl_ns.append([bisect.bisect(col_sum(age_group), ratesum[i][0]/100000)/50.0])
 		i += 1
 
 	aar_bayesian = col_divide(aar_bayesian,0,nyear, True)
@@ -371,25 +392,11 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	### Bayesian ends here
 
 
-	arcpy.AddMessage("Calculating age adjusted rate...")
-	# Calculate Age adjusted rate for each county
-	i = 1
-	num_rate = []
-	while i < len(result):
-		key_id = r_note_col[i][len(r_note_col[0])-1]
-		num_rate.append(vector_multi(vector_divide(death_count_dict[key_id][0:num_count], result[i][0:num_count]), 100000))
-		i += 1
-
-	rate = []
-	for row in num_rate:
-		rate.append(vector_multi(percent[0], row))
-	age_adj_rate = [["Age_adjust_rate"]]
-	age_adj_rate.extend(col_divide(row_sum(rate),0,nyear))
-
-
 	if state_shp != "" or ngbh_dict_loc != "":
 		arcpy.AddMessage("Spatial smoothing the results...")
 		
+		
+		unsmooth_pctl_sp = [['sp_percentile']]
 		### Spatial Bayesian Starts here
 		if ngbh_dict_loc != "":
 			fngbh = open(ngbh_dict_loc, 'r')
@@ -432,6 +439,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 				sp_age_group.append(sp_g_samps_per)
 				j += 1
 			sp_aar_bayesian.append(sample_percentile(col_sum(sp_age_group), [0.5, 0.025, 0.975]))
+			unsmooth_pctl_sp.append([bisect.bisect(col_sum(sp_age_group), ratesum[i][0]/100000)/50.0])
 			i += 1
 
 		sp_aar_bayesian = col_divide(sp_aar_bayesian,0,nyear, True)
@@ -489,6 +497,8 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 
 
 	output = c_merge(age_adj_rate, r_note_col)
+	output = c_merge(output, unsmooth_pctl_ns)
+	output = c_merge(output, unsmooth_pctl_sp)
 	output_pop = c_merge(output, pop_name)
 
 	# Write output to csv file
@@ -523,7 +533,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	f.writelines("\n")
 	f.close()
 		
-	
+
 	if(errorID != []):
 		arcpy.AddWarning("Warning: Following ID is not identified in census data: " + str(errorID) + "!!!")
 	else:

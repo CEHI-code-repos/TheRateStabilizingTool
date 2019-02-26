@@ -1,4 +1,4 @@
-import arcpy, os, json, sys
+import arcpy, os, json, sys, importlib
 import datetime as dt
 
 #raw_data = r'C:\\Users\rl53\Desktop\test\RST_Random_Seed_Test\RawData_state37_tract.data'
@@ -14,9 +14,9 @@ raw_age = str(arcpy.GetParameterAsText(4)) # Get age category, it's the lower bo
 	
 sys.path.append(os.path.split(os.path.realpath(__file__))[0])	
 import fetch_data as fd # This module fetching data from Census Bureau
-fd = reload(fd) # Make sure newest module is loaded
+fd = importlib.reload(fd) # Make sure newest module is loaded
 import construct_deathdata as cd # This module calculate rates from input data and fetched population data
-cd = reload(cd) # Make sure newest module is loaded
+cd = importlib.reload(cd) # Make sure newest module is loaded
 
 #Most common fine age_structure = [0,1,2,5,6,9,10,12,15,18,20,25,30,35,40,45,50,55,60,65,70,75,80,85]
 # Format age category to construct an age category array for calculation
