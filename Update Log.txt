@@ -1,3 +1,19 @@
+version 2.21:
+1. Updated the field map name for age fields in order to join population fields (step 1.5).
+
+version 2.20:
+1. Removed all in one tool
+
+2. Add customized base string to deal with new census 2010 data structure.
+3. 
+Changed 2010 field name string setting.
+
+4. Add county code fetcher to get all counties in a state.
+5. 
+Add code loop to fetch new 2010 census data by county in each state.
+
+6. Add a retry function while download failed because of server error.
+
 version 2.15:
 1. Added instruction to simulate point level data from aggregate data
 2. Added 2 fields in the outcome table to indicate whether spatial or non-spatial Bayesian estimate are unreliable
