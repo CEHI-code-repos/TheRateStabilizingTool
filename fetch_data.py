@@ -196,7 +196,7 @@ def fetch_construct(request):
             if restart == True:
                 arcpy.AddWarning("Retry Successful!")
                 restart = False
-        except urllib.error.HTTPError as e:
+        except urllib2.HTTPError as e:
             #arcpy.AddMessage(request)
             arcpy.AddWarning(e)
             arcpy.AddWarning("Restarting Download in 5 seconds...")

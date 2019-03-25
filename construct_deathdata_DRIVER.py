@@ -1,4 +1,4 @@
-import os, sys, arcpy, json
+import os, sys, arcpy, ast
 # Please Ignore, Original Test Parameters:
 #inputdata = r"C:\Users\lruiyang\Desktop\Age_Adjusted_rate_tool\fake_death.dbf"
 #outputfolder = r"C:\Users\lruiyang\Desktop\Age_Adjusted_rate_tool"
@@ -108,10 +108,10 @@ part1_input=open(raw_data, 'r')
 #exec(part1_input.read())
 r_crit_level = part1_input.readline().replace("\n","")
 r_crit = part1_input.readline().replace("\n","")
-age_vector = json.loads(part1_input.readline().replace("\n","")) 
-age_exp = json.loads(part1_input.readline().replace("\n","")) 
-r_num_table = json.loads(part1_input.readline().replace("\n","").replace("\'", "\"")) 
-r_note_col = json.loads(part1_input.readline().replace("\n","").replace("\'", "\""))
+age_vector = ast.literal_eval(part1_input.readline().replace("\n","")) 
+age_exp = ast.literal_eval(part1_input.readline().replace("\n","")) 
+r_num_table = ast.literal_eval(part1_input.readline().replace("\n","").replace("\'", "\"")) 
+r_note_col = ast.literal_eval(part1_input.readline().replace("\n","").replace("\'", "\""))
 
 [result, percent] = fd.summarize_to_age_structure (age_vector, age_exp, r_num_table, r_note_col, age_structure)
 
