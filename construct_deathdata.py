@@ -1,8 +1,8 @@
-import os, arcpy, numpy, numbers, ast, importlib
+import os, arcpy, numpy, numbers, ast
 import datetime as dt
 from operator import itemgetter
 import data_filter as df # This module filtered the result based on input
-df = importlib.reload(df) # Make sure newest module is loaded
+df = reload(df) # Make sure newest module is loaded
 
 ### Basic Function built-up
 # Check if a key exist in a dictionary
