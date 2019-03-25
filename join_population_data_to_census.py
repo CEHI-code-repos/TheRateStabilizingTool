@@ -82,9 +82,9 @@ f.writelines("ColNameHeader=True\n")
 i = 1
 for col in headerline:
 	#arcpy.AddMessage(col)
-	if col in ["NAME", "state", "county", "tract", "GEOID"]:
+	if col in ["state", "county", "tract", "GEOID"]:
 		f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 30\n")
-	elif col == "Alert":
+	elif col == ["NAME","Alert"]:
 		f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 100\n")
 	elif col == "Population":
 		f.writelines("Col" + str(i) + "=" + str(col) + " Long\n")
@@ -99,6 +99,15 @@ temp_shp = arcpy.MakeFeatureLayer_management(shp_container, 'temp_shp')
 max_left = len(arcpy.Describe(temp_shp).fields)
 arcpy.AddJoin_management(temp_shp, shp_Geoid, outputfolder+'\\'+outfilename, 'GEOID')
 
+# Create age fields based on age structure. This will help to keep only important fields.
+age_fields = []
+for i in range(len(age_structure)):
+    if i < len(age_structure)-1:
+        age_fields.append('age{0}_{1}'.format(age_structure[i], age_structure[i+1]))
+    else:
+        age_fields.append('age{0}p'.format(age_structure[i]))
+
+
 fms = arcpy.FieldMappings()
 
 fms_left = arcpy.FieldMappings()
@@ -107,7 +116,7 @@ i = 0
 for each_fm in fms_left:
 	if i < 	max(max_left-2,0):
 		fms.addFieldMap(each_fm)
-	elif each_fm.getInputFieldName(0).split('.')[-1] in age_structure:
+	elif each_fm.getInputFieldName(0).split('.')[-1] in age_fields:
 		temp = each_fm.outputField
 		temp.name = each_fm.getInputFieldName(0).split('.')[-1]
 		each_fm.outputField = temp
