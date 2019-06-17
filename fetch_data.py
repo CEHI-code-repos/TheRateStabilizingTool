@@ -429,7 +429,7 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     r_note_col = col_erase(pop_table_m, sequence(0, len(pop_table_m[0])+ key_level))
     r_note_col = clean_note_col(r_note_col)
     r_num_table = df_addition(r_num_m, r_num_f)
-    return [age_vector, age_exp, r_num_table, r_note_col]
+    return [age_vector, age_exp, r_num_table, r_num_m, r_num_f, r_note_col]
     
 def summarize_to_age_structure (age_vector, age_exp, r_num_table, r_note_col, age_structure):
     arcpy.AddMessage("Constructing standard population structure...")    

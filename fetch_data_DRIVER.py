@@ -33,7 +33,7 @@ fd = importlib.reload(fd) # Make sure newest module is loaded
 
 # Call fetch_data function in fd module. This module return the population matrix for each geographic unit 
 # ,and the age structure (percentage of each age group) 
-[age_vector, age_exp, r_num_table, r_note_col] = fd.download_age_from_api(base_year, r_crit_level, r_crit, r_year, r_geolevel)
+[age_vector, age_exp, r_num_table, r_num_m, r_num_f, r_note_col] = fd.download_age_from_api(base_year, r_crit_level, r_crit, r_year, r_geolevel)
 
 i = 0
 ncol = len(r_note_col[0])
@@ -45,8 +45,31 @@ while i < len(r_note_col):
 		r_note_col[i].append(fd.merge_array_elements(r_note_col[i], indexV))	
 	i += 1
 
+    
+# Write raw data for male from both standard population years and current year into files
+arcpy.AddMessage("\nWriting male data to file...")
+f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + "_male.data", "w")
+f.write(r_crit_level +'\n')
+f.write(str(r_crit) +'\n')
+f.write(str(age_vector) +'\n')
+f.write(str(age_exp)+'\n')
+f.write(str(r_num_m)+'\n')
+f.write(str(r_note_col)+'\n')
+f.close()
 
-# Write raw data from both standard population years and current year into files
+# Write raw data for female from both standard population years and current year into files
+arcpy.AddMessage("\nWriting female data to file...")
+f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + "_female.data", "w")
+f.write(r_crit_level +'\n')
+f.write(str(r_crit) +'\n')
+f.write(str(age_vector) +'\n')
+f.write(str(age_exp)+'\n')
+f.write(str(r_num_f)+'\n')
+f.write(str(r_note_col)+'\n')
+f.close()
+
+# Write raw data for both gender from both standard population years and current year into files
+arcpy.AddMessage("\nWriting both gender data to file...")
 f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + ".data", "w")
 f.write(r_crit_level +'\n')
 f.write(str(r_crit) +'\n')
@@ -55,6 +78,7 @@ f.write(str(age_exp)+'\n')
 f.write(str(r_num_table)+'\n')
 f.write(str(r_note_col)+'\n')
 f.close()
+
 
 
 # Show Message to inform the output of the tool
