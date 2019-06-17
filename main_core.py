@@ -156,9 +156,9 @@ i = 1
 for col in headerline:
 	#arcpy.AddMessage(col)
 	if col in ["NAME", "state", "county", "tract", "GEOID"]:
-		f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 30\n")
+		f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 200\n")
 	elif col == "Alert":
-		f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 100\n")
+		f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 200\n")
 	elif col == "Population":
 		f.writelines("Col" + str(i) + "=" + str(col) + " Long\n")
 	else:
