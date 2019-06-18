@@ -521,10 +521,10 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	i = 1
 	for col in headerline:
 		#arcpy.AddMessage(col)
-		if col in ["NAME", "state", "county", "tract", "GEOID"]:
-			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 30\n")
-		elif col == "Alert":
-			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 100\n")
+		if col in ["state", "county", "tract", "GEOID"]:
+			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 80\n")
+		elif col in ["Alert", "NAME"]:
+			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 200\n")
 		elif col in ["Population", "NSpUnreli", "SpUnreli"]:
 			f.writelines("Col" + str(i) + "=" + col + " Long\n")
 		else:

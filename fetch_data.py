@@ -399,6 +399,8 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
         for each_row in cnty_code_df[1:]:
             cnty_codes.append(each_row[-1])
         
+        from copy import deepcopy
+        
         pop_table_m = ""
         pop_table_f = ""
         for each_cnty_code in cnty_codes:
@@ -407,16 +409,16 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
             arcpy.AddMessage("Fetching Male data for county "+each_cnty_code+"...")
             pop_table_m_temp = construct_pop_table (r_year, base_string, field_m, r_geolevel, r_criteria_cnty, key_level)
             if pop_table_m == "":
-                pop_table_m = pop_table_m_temp
+                pop_table_m = deepcopy(pop_table_m_temp)
             else:
-                pop_table_m.extend(pop_table_m_temp[1:])
+                pop_table_m.extend(deepcopy(pop_table_m_temp[1:]))
             
             arcpy.AddMessage("Fetching Female data for county "+each_cnty_code+"...")
             pop_table_f_temp = construct_pop_table (r_year, base_string, field_f, r_geolevel, r_criteria_cnty, key_level)
             if pop_table_f == "":
-                pop_table_f = pop_table_m_temp
+                pop_table_f = deepcopy(pop_table_m_temp)
             else:
-                pop_table_f.extend(pop_table_m_temp[1:])
+                pop_table_f.extend(deepcopy(pop_table_m_temp[1:]))
    
     else:    
         arcpy.AddMessage("Fetching Male data...")
