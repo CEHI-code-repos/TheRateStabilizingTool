@@ -48,26 +48,26 @@ while i < len(r_note_col):
 
     
 # Write raw data for male from both standard population years and current year into files
-arcpy.AddMessage("\nWriting male data to file...")
-f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + "_male.data", "w")
-f.write(r_crit_level +'\n')
-f.write(str(r_crit) +'\n')
-f.write(str(age_vector) +'\n')
-f.write(str(age_exp)+'\n')
-f.write(str(r_num_m)+'\n')
-f.write(str(r_note_col)+'\n')
-f.close()
+# arcpy.AddMessage("\nWriting male data to file...")
+# f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + "_male.data", "w")
+# f.write(r_crit_level +'\n')
+# f.write(str(r_crit) +'\n')
+# f.write(str(age_vector) +'\n')
+# f.write(str(age_exp)+'\n')
+# f.write(str(r_num_m)+'\n')
+# f.write(str(r_note_col)+'\n')
+# f.close()
 
-# Write raw data for female from both standard population years and current year into files
-arcpy.AddMessage("\nWriting female data to file...")
-f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + "_female.data", "w")
-f.write(r_crit_level +'\n')
-f.write(str(r_crit) +'\n')
-f.write(str(age_vector) +'\n')
-f.write(str(age_exp)+'\n')
-f.write(str(r_num_f)+'\n')
-f.write(str(r_note_col)+'\n')
-f.close()
+# # Write raw data for female from both standard population years and current year into files
+# arcpy.AddMessage("\nWriting female data to file...")
+# f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + "_female.data", "w")
+# f.write(r_crit_level +'\n')
+# f.write(str(r_crit) +'\n')
+# f.write(str(age_vector) +'\n')
+# f.write(str(age_exp)+'\n')
+# f.write(str(r_num_f)+'\n')
+# f.write(str(r_note_col)+'\n')
+# f.close()
 
 # Write raw data for both gender from both standard population years and current year into files
 arcpy.AddMessage("\nWriting both gender data to file...")
