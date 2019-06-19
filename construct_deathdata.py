@@ -298,7 +298,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 		
 		f = open(os.path.split(inputdata)[0] + '\\schema.ini', 'a')
 		f.write('['+ os.path.split(inputdata)[1] +']\n')
-		f.write('Col{0}={1} Text Width 30\n'.format(id_id+1, id_field))
+		f.write('Col{0}={1} Text Width 200\n'.format(id_id+1, id_field))
 		f.close()
 		
 
@@ -511,9 +511,9 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
 	i = 1
 	for col in headerline:
 		#arcpy.AddMessage(col)
-		if col in ["NAME", "state", "county", "tract", "GEOID"]:
+		if col in ["state", "county", "tract", "GEOID"]:
 			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 30\n")
-		elif col == "Alert":
+		elif col in ["Alert", "NAME"]:
 			f.writelines("Col" + str(i) + "=" + str(col) + " Text Width 100\n")
 		elif col in ["Population", "NSpUnreli", "SpUnreli"]:
 			f.writelines("Col" + str(i) + "=" + col + " Long\n")
