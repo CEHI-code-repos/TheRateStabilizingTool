@@ -199,6 +199,8 @@ def fetch_construct(request):
         except urllib2.HTTPError as e:
             #arcpy.AddMessage(request)
             arcpy.AddWarning(e)
+            arcpy.AddWarning("Have trouble connecting to:")
+            arcpy.AddWarning(request)
             arcpy.AddWarning("Restarting Download in 5 seconds...")
             restart = True
             time.sleep(5)
@@ -390,7 +392,12 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     while i >= key_level:
         key_col.append(i)
         i -= 1
-   
+    
+    if r_year == "2010":  # 2010 Oct update on Census 2010 changed the base string structure
+        base_string = "https://api.census.gov/data/{0}/dec/sf1?key={1}&get={2}&for={3}:*{4}"
+    elif r_year == "2000":
+        base_string = "https://api.census.gov/data/{0}/sf1?key={1}&get={2}&for={3}:*{4}"
+    
     if r_year == "2010" and r_geolevel == "tract":  # 2010 Oct Census update can't get all counties, has to loop through
         arcpy.AddMessage("Fetching county code...")
         cnty_code_request = base_string.format(r_year, get_api_key(), "NAME", "county", r_criteria)
