@@ -71,7 +71,7 @@ while i < len(r_note_col):
 
 # Write raw data for both gender from both standard population years and current year into files
 arcpy.AddMessage("\nWriting both gender data to file...")
-f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + ".data", "w")
+f = open(outputfolder + "\\" + "RawData_" + r_crit_level + r_crit + "_" + r_geolevel + "_std" + base_year + "_pop" + r_year + ".data", "w")
 f.write(r_crit_level +'\n')
 f.write(str(r_crit) +'\n')
 f.write(str(age_vector) +'\n')
