@@ -1,3 +1,7 @@
+version 2.23:
+1. Fixed the bug that server will return HTTP 404 error when standard year is different from your population year.
+2. Added years in population data file name to show the base population and standard population year.
+
 version 2.22:
 1. Minor bug fixes
 
