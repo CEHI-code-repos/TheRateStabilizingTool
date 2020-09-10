@@ -11,7 +11,7 @@ def getkey(item):
 
 # Load apikey for Census Bureau API
 def get_api_key():
-    apikey = "b36c90fb31312a6f1a9c6e25b3b05ca8644077fc"
+    apikey = "928651c1e27fb7146e0d50639a315c798dade0af" #"b36c90fb31312a6f1a9c6e25b3b05ca8644077fc"
     return apikey
 
 
@@ -201,9 +201,9 @@ def fetch_construct(request):
             arcpy.AddWarning(e)
             arcpy.AddWarning("Have trouble connecting to:")
             arcpy.AddWarning(request)
-            arcpy.AddWarning("Restarting Download in 5 seconds...")
+            arcpy.AddWarning("Restarting Download in 10 seconds...")
             restart = True
-            time.sleep(5)
+            time.sleep(10)
 
     unformData = response.read().decode('utf-8')
     [censusdata, resid] = construct_list(unformData, list())
@@ -252,17 +252,28 @@ def construct_pop_table (base_year, base_string, field, geolevel, criteria, key 
     apikey = get_api_key()
 
     # Construct request string
+    arcpy.AddMessage(base_string.format(base_year, apikey, fields_f1, geolevel, criteria))
     request1 = base_string.format(base_year, apikey, fields_f1, geolevel, criteria)
     request2 = base_string.format(base_year, apikey, fields_f2, geolevel, criteria)
     request3 = base_string.format(base_year, apikey, fields_f3, geolevel, criteria)
     request4 = base_string.format(base_year, apikey, fields_f4, geolevel, criteria)
+    
+    
 
 
     # Fetch data & Construct base population table
     df1 = fetch_construct(request1)
+    arcpy.AddMessage("Sleeping for 2 seconds to avoid IP ban...")
+    time.sleep(2)
     df2 = fetch_construct(request2)
+    arcpy.AddMessage("Sleeping for 2 seconds to avoid IP ban...")
+    time.sleep(2)
     df3 = fetch_construct(request3)
+    arcpy.AddMessage("Sleeping for 2 seconds to avoid IP ban...")
+    time.sleep(2)
     df4 = fetch_construct(request4)
+    arcpy.AddMessage("Sleeping for 2 seconds to avoid IP ban...")
+    time.sleep(2)
 
     # Merge 4 data request
     df = c_merge(df1,df2)
@@ -335,7 +346,7 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     if base_year == "2010":  # 2010 Oct update on Census 2010 changed the base string structure
         base_string = "https://api.census.gov/data/{0}/dec/sf1?key={1}&get={2}&for={3}:*{4}"
     elif base_year == "2000":
-        base_string = "https://api.census.gov/data/{0}/sf1?key={1}&get={2}&for={3}:*{4}"
+        base_string = "https://api.census.gov/data/{0}/dec/sf1?key={1}&get={2}&for={3}:*{4}"
 
     # Population by age is in field PCT0120003 to PCT0120209 for 2010, PCT012003 to PCT012209 for 2000
     #geolevel = "tract"
@@ -396,9 +407,9 @@ def download_age_from_api (base_year, r_crit_level, r_crit, r_year, r_geolevel):
     if r_year == "2010":  # 2010 Oct update on Census 2010 changed the base string structure
         base_string = "https://api.census.gov/data/{0}/dec/sf1?key={1}&get={2}&for={3}:*{4}"
     elif r_year == "2000":
-        base_string = "https://api.census.gov/data/{0}/sf1?key={1}&get={2}&for={3}:*{4}"
+        base_string = "https://api.census.gov/data/{0}/dec/sf1?key={1}&get={2}&for={3}:*{4}"
     
-    if r_year == "2010" and r_geolevel == "tract":  # 2010 Oct Census update can't get all counties, has to loop through
+    if r_geolevel == "tract":  # 2010 Oct Census update can't get all counties, has to loop through
         arcpy.AddMessage("Fetching county code...")
         cnty_code_request = base_string.format(r_year, get_api_key(), "NAME", "county", r_criteria)
         cnty_code_df = fetch_construct(cnty_code_request)
