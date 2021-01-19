@@ -1,6 +1,9 @@
 version 2.30:
 1. Step 1 data download will save population data for Male, Female, and total population.
 
+version 2.25:
+1. Fixed an issue that cases with age lower than the lowest age group will be counted in the lowest age group.
+
 version 2.24:
 1. Updated for the new census API link. 
 2. Added wait time to avoid census server IP ban.

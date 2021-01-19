@@ -105,7 +105,7 @@ def index_age (age, age_struct):
     i = 0
     while i < len(age_struct):
         if i == 0 and age < age_struct[0]:
-            return 0
+            return -1
         elif age_struct[i] < 0:
             if(age < abs(age_struct[i])):
                 return i - 1
@@ -316,6 +316,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
     ## Go through each record to generate disease/death count in each age categories for each geographic boundary 
     cursor = arcpy.SearchCursor(inputdata)
     errorID = []
+    total_death = 0
     for row in cursor:
         temp_ID = str(row.getValue(id_field))
         temp_age_check = row.getValue(age_field)
@@ -335,7 +336,6 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
                 
     if not check_age_group_case_count(death_count, len(death_count[0])-len(r_note_col[0])):
         arcpy.AddError("Some age group don't have any case in it!!! Please summarize your data based on the age and then redesign your age group.")
-
         
     arcpy.AddMessage("Calculating age adjusted rate...")
     # Calculate Age adjusted rate for each county
