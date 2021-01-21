@@ -36,12 +36,12 @@ if(age_structure[0] < 0): # Maximum of one cap per request
 # Read local data fetched from 1st step 
 part1_input=open(raw_data, 'r')
 #exec(part1_input.read())
-r_crit_level = part1_input.readline().replace("\n","")
-r_crit = part1_input.readline().replace("\n","")
-age_vector = json.loads(part1_input.readline().replace("\n","")) 
-age_exp = json.loads(part1_input.readline().replace("\n","")) 
-r_num_table = json.loads(part1_input.readline().replace("\n","").replace("\'", "\"")) 
-r_note_col = json.loads(part1_input.readline().replace("\n","").replace("\'", "\""))
+r_crit_level = part1_input.readline().replace("\n","").replace("u\"", "\"")
+r_crit = part1_input.readline().replace("\n","").replace("u\"", "\"")
+age_vector = json.loads(part1_input.readline().replace("\n","").replace("u\"", "\"")) 
+age_exp = json.loads(part1_input.readline().replace("\n","").replace("u\"", "\"")) 
+r_num_table = json.loads(part1_input.readline().replace("\n","").replace("\'", "\"").replace("u\"", "\"")) 
+r_note_col = json.loads(part1_input.readline().replace("\n","").replace("\'", "\"").replace("u\"", "\""))
 
 [result, percent] = fd.summarize_to_age_structure (age_vector, age_exp, r_num_table, r_note_col, age_structure)
 
