@@ -106,12 +106,12 @@ df = reload(df) # Make sure newest module is loaded
 # Read local data fetched from 1st step 
 part1_input=open(raw_data, 'r')
 #exec(part1_input.read())
-r_crit_level = part1_input.readline().replace("\n","")
-r_crit = part1_input.readline().replace("\n","")
-age_vector = ast.literal_eval(part1_input.readline().replace("\n","")) 
-age_exp = ast.literal_eval(part1_input.readline().replace("\n","")) 
-r_num_table = ast.literal_eval(part1_input.readline().replace("\n","").replace("\'", "\"")) 
-r_note_col = ast.literal_eval(part1_input.readline().replace("\n","").replace("\'", "\""))
+r_crit_level = part1_input.readline().replace("\n","").replace("u\"", "\"")
+r_crit = part1_input.readline().replace("\n","").replace("u\"", "\"")
+age_vector = ast.literal_eval(part1_input.readline().replace("\n","").replace("u\"", "\"")) 
+age_exp = ast.literal_eval(part1_input.readline().replace("\n","").replace("u\"", "\"")) 
+r_num_table = ast.literal_eval(part1_input.readline().replace("\n","").replace("\'", "\"").replace("u\"", "\"")) 
+r_note_col = ast.literal_eval(part1_input.readline().replace("\n","").replace("\'", "\"").replace("u\"", "\""))
 
 [result, percent] = fd.summarize_to_age_structure (age_vector, age_exp, r_num_table, r_note_col, age_structure)
 
