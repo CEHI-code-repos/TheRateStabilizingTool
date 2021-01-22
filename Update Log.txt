@@ -1,5 +1,8 @@
-version 2.31:
+version 2.32:
 1. Step 1 data download will save population data for Male, Female, and total population.
+
+version 2.26:
+1. Updated the handler to accept unicode data in RawData field name.
 
 version 2.25:
 1. Fixed an issue that cases with age lower than the lowest age group will be counted in the lowest age group.
