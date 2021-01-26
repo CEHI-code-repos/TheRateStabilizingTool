@@ -17,6 +17,8 @@ import fetch_data as fd # This module fetching data from Census Bureau
 fd = reload(fd) # Make sure newest module is loaded
 import construct_deathdata as cd # This module calculate rates from input data and fetched population data
 cd = reload(cd) # Make sure newest module is loaded
+import update_schema as us # This module cleans schema file to make sure same name file exists only 1 time in schema
+us = reload(us) # Make sure newest module is loaded
 
 #Most common fine age_structure = [0,1,2,5,6,9,10,12,15,18,20,25,30,35,40,45,50,55,60,65,70,75,80,85]
 # Format age category to construct an age category array for calculation
@@ -73,8 +75,12 @@ for row in result:
 	f.writelines(temp_text + "\n")
 f.close()
 
+# Clean Schema.ini to remove the entry with same table name
+cleaned_content = us.clean_exist_schema(outputfolder + "\\" + "schema.ini", [outfilename])
+
 # Update Schema.ini file
-f = open(outputfolder + "\\" + "schema.ini", "a")
+f = open(outputfolder + "\\" + "schema.ini", "w")
+f.write(cleaned_content)
 f.writelines("["+outfilename+"]\n")
 f.writelines("Format=CSVDelimited\n")
 f.writelines("ColNameHeader=True\n")

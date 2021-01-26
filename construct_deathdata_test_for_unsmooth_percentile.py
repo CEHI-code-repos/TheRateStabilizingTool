@@ -3,6 +3,8 @@ import datetime as dt
 from operator import itemgetter
 import data_filter as df # This module filtered the result based on input
 df = reload(df) # Make sure newest module is loaded
+import update_schema as us # This module cleans schema file to make sure same name file exists only 1 time in schema
+us = reload(us) # Make sure newest module is loaded
 
 ### Basic Function built-up
 # Check if a key exist in a dictionary
@@ -514,8 +516,12 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
         f.writelines(temp_text + "\n")
     f.close()
 
+    # Clean Schema.ini to remove the entry with same table name
+    cleaned_content = us.clean_exist_schema(outputfolder + "\\" + "schema.ini", ["age_adjust_"+ filename + ".csv"])
+    
     # Write Schema.ini file
     f = open(outputfolder + "\\" + "schema.ini", "w")
+    f.write(cleaned_content)
     f.writelines("[age_adjust_" + filename + ".csv]\n")
     f.writelines("Format=CSVDelimited\n")
     f.writelines("ColNameHeader=True\n")
