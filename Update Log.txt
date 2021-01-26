@@ -1,3 +1,6 @@
+version 2.2.7
+1. Added a schema.ini clean function to avoid schema file conflict with the same output name.
+
 version 2.26:
 1. Updated the handler to accept unicode data in RawData field name.
 
