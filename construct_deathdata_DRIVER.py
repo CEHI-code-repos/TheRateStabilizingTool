@@ -102,6 +102,8 @@ import construct_deathdata_test_for_unsmooth_percentile as cd # This module calc
 cd = importlib.reload(cd) # Make sure newest module is loaded
 import data_filter as df # This module filtered the result based on input
 df = importlib.reload(df) # Make sure newest module is loaded
+import update_schema as us # This module cleans schema file to avoid schema conflict
+us = importlib.reload(us) # Make sure newest module is loaded
 
 # Read local data fetched from 1st step 
 part1_input=open(raw_data, 'r')
@@ -138,8 +140,12 @@ f.close()
 # Call construct_deathdata function in cd module. This module returns the age adjusted rate
 outputpath = cd.construct_deathdata(r_note_col, result, percent, inputdata, outputfolder, id_field, age_field, nyear, ngbh_dict_loc=ngbh_dict_loc)
 
+# Clean Schema.ini to remove the entry with same table name
+cleaned_content = us.clean_exist_schema(outputfolder + "\\" + "schema.ini", ["Standard_Age_structure.csv", "PopAge_structure_"+ r_crit_level + r_crit + ".csv"])
+
 # Update Schema.ini file
-f = open(outputfolder + "\\" + "schema.ini", "a")
+f = open(outputfolder + "\\" + "schema.ini", "w")
+f.write(cleaned_content)
 f.writelines("[Standard_Age_structure.csv]\n")
 f.writelines("Format=CSVDelimited\n")
 f.writelines("ColNameHeader=True\n")
