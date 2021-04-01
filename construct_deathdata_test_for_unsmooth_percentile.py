@@ -122,7 +122,13 @@ def index_age (age, age_struct):
 # Vector divide X1i/y1i
 def vector_divide(v1, v2):
     result = []
-    if (len(v1) != len(v2)):
+    if isinstance(v2, numbers.Number):
+        i = 0
+        while i < len(v1):
+            result.append(float(v1[i])/v2)
+            i += 1
+        return result
+    elif (len(v1) != len(v2)):
         raise ValueError("Length of Two Vector is not the same")
     else:
         i = 0
@@ -219,21 +225,35 @@ def df_sum(df):
 
 # Get prior events and prior population for each age categories in each geographic area
 def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 = 5):  # Set a00 n00 0 for global a0 and n0 calculation
-    Y_prior = 6
+    Y_prior = 6.0
     pop_mat = col_erase(result, sequence(-1, ncol, -1))
     case_mat = col_erase(death_count, sequence(-1, ncol, -1))
     #n_tot = df_sum(pop_mat)
     #c_tot = df_sum(case_mat)
     n_tot = col_sum(pop_mat)
+    if n_tot == 0:
+        return([a00, n00])
+    
     c_tot = col_sum(case_mat)
     lam = vector_divide(c_tot, n_tot)
 
-    a0adj = vector_multi(percentile, Y_prior)
+    if sum(lam) > 0:
+        pi_lam = vector_multi(percentile, lam)
+        lam0d = sum(pi_lam)
+        pct_age_spec = vector_divide(pi_lam, lam0d)
+        a0adj = vector_multi(pct_age_spec, Y_prior)
+    else:
+        n_lam = len(n_tot)
+        a0adj = []
+        for i in range(n_lam):
+            a0adj.append(Y_prior/n_lam)
+    
     
     if n00 == 0: # if n00 = 0 we are calculating n00
         n0 = vector_divide(a0adj, lam)
     else:
         lamadj = []
+        a0adj_00 = []
         i = 0
         while i < len(n_tot):
             each_n = n_tot[i]
@@ -245,8 +265,9 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 =
             else:
                 omega = min(float(each_n)/n00[i], 0.99)
                 lamadj.append(omega*c_tot[i]/each_n + (1-omega)*a00[i]/n00[i])
+                a0adj_00.append(omega*a0adj[i]+(1-omega)*a00[i])
             i += 1
-        n0 = vector_divide(a0adj, lamadj)
+        n0 = vector_divide(a0adj_00, lamadj)
     
     return [a0adj, n0]
     
@@ -437,6 +458,9 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
             j = 0
             sp_age_group = []
             while j < num_count:
+                if n[j] + n0i[j] == 0:
+                    arcpy.AddError(n)
+                    arcpy.AddError(n0i)
                 sp_g_samps_per = vector_multi(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000), percent[0][j])
                 sp_age_group.append(sp_g_samps_per)
                 j += 1
