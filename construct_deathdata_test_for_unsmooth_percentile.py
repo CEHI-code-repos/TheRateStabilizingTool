@@ -207,11 +207,11 @@ def vect_to_str(vector):
     return result
     
 # Sample Gamma function
-def gamma_sample (shape, scale, nSample):
+def gamma_sample (shape, scale, nSample, geoid):
     numpy.random.seed(20151201)
     if shape == 0:
         g_sample1000 = sequence(0, nSample, 0)
-        arcpy.AddWarning("Watch out! Some age group don't have any incident!!!")
+        arcpy.AddWarning("Some age group in " + geoid + " don't have any incident!!!")
     else:
         g_sample1000 = numpy.random.gamma(shape, scale, nSample)
     return g_sample1000
@@ -375,6 +375,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
                 death_count_dict[temp_ID][idx] += 1
                 
     if not check_age_group_case_count(death_count, len(death_count[0])-len(r_note_col[0])):
+        arcpy.AddWarning(death_count)
         arcpy.AddError("Some age group don't have any case in it!!! Please summarize your data based on the age and then redesign your age group.")
         
     arcpy.AddMessage("Calculating age adjusted rate...")
@@ -409,6 +410,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
     while i < len(death_count):
         Y = death_count[i][0:num_count]
         n = result[i+1][0:num_count]
+        Geokey = r_note_col[i][-1]
         # Make sure n is always equal or larger than Y
         k = 0
         while k < len(n):
@@ -418,7 +420,7 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
         j = 0
         age_group = []
         while j < num_count:
-            g_samps_per = vector_multi(gamma_sample(Y[j] + a0[j], 1.0/(n[j] + n0[j]), 5000), percent[0][j])
+            g_samps_per = vector_multi(gamma_sample(Y[j] + a0[j], 1.0/(n[j] + n0[j]), 5000, Geokey), percent[0][j])
             age_group.append(g_samps_per)
             j += 1
         aar_bayesian.append(sample_percentile(col_sum(age_group), [0.5, 0.025, 0.975]))
@@ -484,11 +486,11 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
                 if n[j] + n0i[j] == 0:
                     arcpy.AddError(n)
                     arcpy.AddError(n0i)
-                sp_g_samps_per = vector_multi(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000), percent[0][j])
+                sp_g_samps_per = vector_multi(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000, Geokey), percent[0][j])
                 # if Geokey == '37019020304':  ###For debug
                     # arcpy.AddWarning(Y[j] + a0i[j])
                     # arcpy.AddWarning(n[j] + n0i[j])
-                    # arcpy.AddWarning(sample_percentile(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000), [0.5, 0.025, 0.975]))
+                    # arcpy.AddWarning(sample_percentile(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000, Geokey), [0.5, 0.025, 0.975]))
                     # arcpy.AddWarning(percent[0][j])
                     # arcpy.AddWarning("-------")
                 
