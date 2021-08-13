@@ -224,7 +224,7 @@ def df_sum(df):
     return result
 
 # Get prior events and prior population for each age categories in each geographic area
-def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 = 5):  # Set a00 n00 0 for global a0 and n0 calculation
+def get_a0_n0 (result, ncol, death_count, percentile, a00=[], n00=[], minimum_n0 = 5, debug=False):  # Set a00 n00 0 for global a0 and n0 calculation
     Y_prior = 6.0
     pop_mat = col_erase(result, sequence(-1, ncol, -1))
     case_mat = col_erase(death_count, sequence(-1, ncol, -1))
@@ -236,6 +236,11 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 =
     
     c_tot = col_sum(case_mat)
     lam = vector_divide(c_tot, n_tot)
+    
+    if debug:
+        arcpy.AddWarning(c_tot)
+        arcpy.AddWarning(n_tot)
+        arcpy.AddWarning("!--------!")
 
     if sum(lam) > 0:
         pi_lam = vector_multi(percentile, lam)
@@ -249,25 +254,37 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=0, n00=0, minimum_n0 =
             a0adj.append(Y_prior/n_lam)
     
     
-    if n00 == 0: # if n00 = 0 we are calculating n00
+    if n00 == []: # if n00 = 0 we are calculating n00
         n0 = vector_divide(a0adj, lam)
+        if debug:
+            arcpy.AddWarning(lam)
     else:
         lamadj = []
         a0adj_00 = []
         i = 0
         while i < len(n_tot):
             each_n = n_tot[i]
-            #print each_n
             if each_n == 0:
                 #arcpy.AddMessage('!!!')
                 #arcpy.AddMessage(float(a00[i])/n00[i])
                 lamadj.append(float(a00[i])/n00[i])
             else:
                 omega = min(float(each_n)/n00[i], 0.99)
+                if debug:
+                    arcpy.AddWarning("000000")
+                    arcpy.AddWarning(omega)
+                    arcpy.AddWarning("000000")
                 lamadj.append(omega*c_tot[i]/each_n + (1-omega)*a00[i]/n00[i])
                 a0adj_00.append(omega*a0adj[i]+(1-omega)*a00[i])
             i += 1
         n0 = vector_divide(a0adj_00, lamadj)
+            
+        if debug:
+            arcpy.AddWarning("#####")
+            arcpy.AddWarning(lamadj)
+            arcpy.AddWarning(n0)
+            arcpy.AddWarning("#####")
+        
     
     return [a0adj, n0]
     
@@ -384,7 +401,6 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
     ###
     ncol = len(r_note_col[0])
     [a0, n0] = get_a0_n0 (result[1:], ncol, death_count, percent[0])
-    #arcpy.AddMessage(str(a0))
 
     i = 0
     aar_bayesian = []
@@ -443,9 +459,16 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
             death_with_header.extend(death_count)
             [temp_death, temp_dcol] = df.filter_with_dict (death_with_header, r_note_col, "GEOID", data_list_dict, cnty_filter = False)
 
-            #arcpy.AddMessage(Geokey)
+            #arcpy.AddMessage(Geokey)  ###For debug ----
+            # if Geokey == '37019020304':
+                # [a0i, n0i] = get_a0_n0 (temp_result[1:], ncol, temp_death[1:], percent[0], a0, n0, 5, True)
+                # arcpy.AddWarning(a0)
+                # arcpy.AddWarning(n0)
+                # arcpy.AddWarning("========")
+            # else:
+                # [a0i, n0i] = get_a0_n0 (temp_result[1:], ncol, temp_death[1:], percent[0], a0, n0)
             [a0i, n0i] = get_a0_n0 (temp_result[1:], ncol, temp_death[1:], percent[0], a0, n0)
-            
+                    
             Y = death_count[i][0:num_count]
             n = result[i+1][0:num_count]
             
@@ -462,12 +485,28 @@ def construct_deathdata (r_note_col, result, percent, inputdata, outputfolder, i
                     arcpy.AddError(n)
                     arcpy.AddError(n0i)
                 sp_g_samps_per = vector_multi(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000), percent[0][j])
+                # if Geokey == '37019020304':  ###For debug
+                    # arcpy.AddWarning(Y[j] + a0i[j])
+                    # arcpy.AddWarning(n[j] + n0i[j])
+                    # arcpy.AddWarning(sample_percentile(gamma_sample(Y[j] + a0i[j], 1.0/(n[j] + n0i[j]), 5000), [0.5, 0.025, 0.975]))
+                    # arcpy.AddWarning(percent[0][j])
+                    # arcpy.AddWarning("-------")
+                
                 sp_age_group.append(sp_g_samps_per)
                 j += 1
             sp_aar_bayesian.append(sample_percentile(col_sum(sp_age_group), [0.5, 0.025, 0.975]))
             unsmooth_pctl_sp.append([bisect.bisect(col_sum(sp_age_group), ratesum[i][0]/100000)/50.0])
             i += 1
-
+        
+            # if Geokey == '37019020304': ###For debug
+                # arcpy.AddWarning(Y)
+                # arcpy.AddWarning(n)
+                # arcpy.AddWarning(a0i)
+                # arcpy.AddWarning(n0i)
+                # arcpy.AddWarning(percent)
+                # arcpy.AddWarning(sp_aar_bayesian[-1])
+                # arcpy.AddWarning(sample_percentile(col_sum(sp_age_group), [0.5, 0.025, 0.975]))
+        
         sp_aar_bayesian = col_divide(sp_aar_bayesian,0,nyear, True)
         sp_aar_bayesian = col_divide(sp_aar_bayesian,1,nyear, True)
         sp_aar_bayesian = col_divide(sp_aar_bayesian,2,nyear, True)
