@@ -240,24 +240,18 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=[], n00=[], minimum_n0
     if debug:
         arcpy.AddWarning(c_tot)
         arcpy.AddWarning(n_tot)
-        arcpy.AddWarning("!--------!")
-
-    if sum(lam) > 0:
+        arcpy.AddWarning("!--------!") 
+    
+    if n00 == []: # if n00 = 0 we are calculating n00 
         pi_lam = vector_multi(percentile, lam)
         lam0d = sum(pi_lam)
         pct_age_spec = vector_divide(pi_lam, lam0d)
         a0adj = vector_multi(pct_age_spec, Y_prior)
-    else:
-        n_lam = len(n_tot)
-        a0adj = []
-        for i in range(n_lam):
-            a0adj.append(Y_prior/n_lam)
-    
-    
-    if n00 == []: # if n00 = 0 we are calculating n00
         n0 = vector_divide(a0adj, lam)
         if debug:
             arcpy.AddWarning(lam)
+        return [a0adj, n0]
+            
     else:
         lamadj = []
         a0adj_00 = []
@@ -275,8 +269,13 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=[], n00=[], minimum_n0
                     arcpy.AddWarning(omega)
                     arcpy.AddWarning("000000")
                 lamadj.append(omega*c_tot[i]/each_n + (1-omega)*a00[i]/n00[i])
-                a0adj_00.append(omega*a0adj[i]+(1-omega)*a00[i])
             i += 1
+            
+        pi_lamadj = vector_multi(percentile, lamadj)
+        lamadj0d = sum(pi_lamadj)
+        pct_age_spec_adj = vector_divide(pi_lamadj, lamadj0d)
+        a0adj_00 = vector_multi(pct_age_spec_adj, Y_prior)
+
         n0 = vector_divide(a0adj_00, lamadj)
             
         if debug:
@@ -285,8 +284,7 @@ def get_a0_n0 (result, ncol, death_count, percentile, a00=[], n00=[], minimum_n0
             arcpy.AddWarning(n0)
             arcpy.AddWarning("#####")
         
-    
-    return [a0adj, n0]
+        return [a0adj_00, n0]
     
 # Sample the vector based on percentile, Unit in /100,000people
 def sample_percentile (vector, percentile_vector):
