@@ -1,3 +1,6 @@
+version 2.4.1:
+1. Updated prior distribution method for easier understanding of the unreliable estimates.
+
 version 2.3.3:
 1. Step 1 data download will save population data for Male, Female, and total population.
 
